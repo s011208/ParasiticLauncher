@@ -32,7 +32,7 @@ public class StoreWidgetHelper {
     }
 
     private StoreWidgetHelper(Context context) {
-        mContext = context;
+        mContext = context.getApplicationContext();
         mPrefs = mContext.getSharedPreferences(STORE_PREFERENCE, Context.MODE_PRIVATE);
         loadAllStoredPages();
     }
