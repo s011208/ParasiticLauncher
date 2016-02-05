@@ -40,6 +40,7 @@ public class LoadingSingleIconTask implements Runnable {
         ActivityInfoCache icon = new ActivityInfoCache();
         icon.setIcon(activityIcon);
         icon.setTitle(title);
+        icon.setBitmap(IconLoader.convertDrawableIconToBitmap(activityIcon));
         cb.onFinishLoading(new ComponentName(appInfo.activityInfo.packageName, appInfo.activityInfo.name), icon);
     }
 

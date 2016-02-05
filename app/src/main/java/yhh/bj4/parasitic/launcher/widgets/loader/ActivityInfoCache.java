@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable;
 public class ActivityInfoCache {
     private String mTitle;
     private Drawable mIconLabel;
+    private Bitmap mBitmap;
 
     public void setTitle(String title) {
         mTitle = title;
@@ -27,13 +28,11 @@ public class ActivityInfoCache {
         return mIconLabel;
     }
 
-    public static Bitmap convertToBitmap(Drawable d) {
-        Canvas canvas = new Canvas();
-        d.setBounds(0, 0, 500, 500);
-        Bitmap b = Bitmap.createBitmap(500, 500, Bitmap.Config.ARGB_8888);
-        canvas.setBitmap(b);
-        d.draw(canvas);
-        canvas.setBitmap(null);
-        return b;
+    public Bitmap getBitmap() {
+        return mBitmap;
+    }
+
+    public void setBitmap(Bitmap b) {
+        mBitmap = b;
     }
 }
