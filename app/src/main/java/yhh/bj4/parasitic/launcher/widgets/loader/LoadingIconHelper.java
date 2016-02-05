@@ -20,15 +20,20 @@ public class LoadingIconHelper implements Runnable, LoadingSingleIconTask.Callba
     private static final boolean DEBUG = true;
     private static final boolean DEBUG_TRACE = true;
     private static final String TAG = "IconLoader";
+    private final WeakReference<Callback> mCallback;
     private final WeakReference<Context> mContext;
     private final HashMap<ComponentName, ActivityInfoCache> mActivityInfoCache;
     private AtomicInteger mRemainTasks = new AtomicInteger(0);
 
-    public LoadingIconHelper(Context context, HashMap<ComponentName, ActivityInfoCache> activityInfoCache) {
+    public LoadingIconHelper(Context context, HashMap<ComponentName, ActivityInfoCache> activityInfoCache, Callback cb) {
         mContext = new WeakReference<>(context);
         mActivityInfoCache = activityInfoCache;
+        mCallback = new WeakReference<>(cb);
     }
 
+    public interface Callback {
+        void onFinishLoading();
+    }
 
     @Override
     public void run() {
@@ -62,6 +67,10 @@ public class LoadingIconHelper implements Runnable, LoadingSingleIconTask.Callba
         time = System.currentTimeMillis() - time;
         if (DEBUG) {
             Log.d(TAG, "LoadingIconHelper get system app done, takes: " + time);
+        }
+        final Callback cb = mCallback.get();
+        if (cb != null) {
+            cb.onFinishLoading();
         }
     }
 

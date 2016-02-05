@@ -5,13 +5,14 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
 /**
  * Created by Yen-Hsun_Huang on 2016/2/5.
  */
-public class IconLoader {
+public class IconLoader implements LoadingIconHelper.Callback {
     private static final boolean DEBUG = true;
     private static final boolean DEBUG_TRACE = true;
     private static final String TAG = "IconLoader";
@@ -36,12 +37,38 @@ public class IconLoader {
         return sInstance;
     }
 
+    @Override
+    public void onFinishLoading() {
+        for (Callback cb : mCallbacks) {
+            cb.onRefresh();
+        }
+    }
+
+    public interface Callback {
+        void onRefresh();
+    }
+
     private IconLoader(Context context) {
         mContext = context.getApplicationContext();
         startToLoadIcon();
     }
 
+    private final ArrayList<Callback> mCallbacks = new ArrayList<>();
+
+    public void addCallback(Callback cb) {
+        while (mCallbacks.contains(cb)) {
+            mCallbacks.remove(cb);
+        }
+        mCallbacks.add(cb);
+    }
+
+    public void removeCallback(Callback cb) {
+        while (mCallbacks.contains(cb)) {
+            mCallbacks.remove(cb);
+        }
+    }
+
     private void startToLoadIcon() {
-        sWorker.post(new LoadingIconHelper(mContext, mActivityInfoCache));
+        sWorker.post(new LoadingIconHelper(mContext, mActivityInfoCache, IconLoader.this));
     }
 }
