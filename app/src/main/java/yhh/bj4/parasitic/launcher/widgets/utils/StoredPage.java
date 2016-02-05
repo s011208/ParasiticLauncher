@@ -22,6 +22,14 @@ public class StoredPage {
 
     private String mPageName = null;
 
+    public StoredPage() {
+
+    }
+
+    public StoredPage(JSONObject rawJson) {
+        read(rawJson);
+    }
+
     public void addItem(Item item) {
         mItems.add(item);
     }
@@ -54,9 +62,8 @@ public class StoredPage {
         return json.toString();
     }
 
-    public void read(String rawJson) {
+    public void read(JSONObject json) {
         try {
-            JSONObject json = new JSONObject(rawJson);
             mPageName = json.getString(PAGE_NAME);
             mPageType = json.getInt(PAGE_TYPE);
             JSONArray jArray = json.getJSONArray(PAGE_ITEMS);
@@ -69,6 +76,5 @@ public class StoredPage {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
 }

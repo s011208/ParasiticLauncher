@@ -80,8 +80,7 @@ public abstract class Item {
             final String className = json.getString(CLASS);
             Item rtn = null;
             if (AppIcon.class.getName().equals(className)) {
-                rtn = new AppIcon();
-                rtn.read(json);
+                rtn = new AppIcon(json);
             } else {
                 Log.d(TAG, "cannot instantiate class with: " + json.toString());
             }

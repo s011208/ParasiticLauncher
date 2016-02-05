@@ -20,6 +20,10 @@ public class AppIcon extends Item {
 
     }
 
+    public AppIcon(JSONObject json) {
+        readData(json);
+    }
+
     @Override
     public JSONObject getData() {
         JSONObject json = new JSONObject();
