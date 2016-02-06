@@ -1,7 +1,6 @@
-package yhh.bj4.parasitic.launcher.widgets.loader;
+package yhh.bj4.parasitic.launcher.loader;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 
 /**

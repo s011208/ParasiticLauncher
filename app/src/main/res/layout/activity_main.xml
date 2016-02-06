@@ -9,8 +9,16 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="yhh.bj4.parasitic.launcher.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+    <GridView
+        android:scrollbars="none"
+        android:id="@+id/test_grid"
+        android:numColumns="auto_fit"
+        android:stretchMode="spacingWidth"
+        android:gravity="center"
+        android:layout_centerInParent="true"
+        android:columnWidth="@dimen/normal_app_icon_layout_icon_size"
+        android:verticalSpacing="10dp"
+        android:horizontalSpacing="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></GridView>
 </RelativeLayout>

@@ -1,4 +1,4 @@
-package yhh.bj4.parasitic.launcher.widgets.loader;
+package yhh.bj4.parasitic.launcher.loader;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -16,8 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by Yen-Hsun_Huang on 2016/2/5.
  */
-public class LoadingIconHelper implements Runnable, LoadingSingleIconTask.Callback {
-    private static final boolean DEBUG = true;
+public class LoadIconHelper implements Runnable, LoadSingleIconTask.Callback {
+    private static final boolean DEBUG = false;
     private static final boolean DEBUG_TRACE = true;
     private static final String TAG = "IconLoader";
     private final WeakReference<Callback> mCallback;
@@ -25,7 +25,7 @@ public class LoadingIconHelper implements Runnable, LoadingSingleIconTask.Callba
     private final HashMap<ComponentName, ActivityInfoCache> mActivityInfoCache;
     private AtomicInteger mRemainTasks = new AtomicInteger(0);
 
-    public LoadingIconHelper(Context context, HashMap<ComponentName, ActivityInfoCache> activityInfoCache, Callback cb) {
+    public LoadIconHelper(Context context, HashMap<ComponentName, ActivityInfoCache> activityInfoCache, Callback cb) {
         mContext = new WeakReference<>(context);
         mActivityInfoCache = activityInfoCache;
         mCallback = new WeakReference<>(cb);
@@ -52,7 +52,7 @@ public class LoadingIconHelper implements Runnable, LoadingSingleIconTask.Callba
             Trace.beginSection("iterate apps");
         }
         for (ResolveInfo appInfo : apps) {
-            new Thread(new LoadingSingleIconTask(pm, appInfo, LoadingIconHelper.this)).start();
+            new Thread(new LoadSingleIconTask(pm, appInfo, LoadIconHelper.this)).start();
         }
         while (mRemainTasks.get() != 0) {
             try {
