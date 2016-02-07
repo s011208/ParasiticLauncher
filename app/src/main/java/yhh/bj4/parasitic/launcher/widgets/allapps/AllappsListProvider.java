@@ -9,6 +9,8 @@ import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
@@ -20,10 +22,10 @@ import yhh.bj4.parasitic.launcher.loader.IconLoader;
 public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactory {
     private static final String TAG = "AllappsListProvider";
     private static final boolean DEBUG = true;
-    private static final int ITEMS_PER_ROW = 4;
-    private final ArrayList<ActivityInfoCache> listItemList = new ArrayList<>();
-    private final SparseArray<RemoteViews> mAllappsContainerArray = new SparseArray<>();
-    private final Context mContext;
+    private static final int ITEMS_PER_ROW = 5;
+    private ArrayList<ActivityInfoCache> listItemList = new ArrayList<>();
+    private SparseArray<RemoteViews> mAllappsContainerArray = new SparseArray<>();
+    private Context mContext;
     private final int mAppWidgetId;
 
     public AllappsListProvider(Context context, Intent intent) {
@@ -46,6 +48,12 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         listItemList.clear();
         mAllappsContainerArray.clear();
         listItemList.addAll(IconLoader.getInstance(mContext).getAllActivitiesInfoCache().values());
+        Collections.sort(listItemList, new Comparator<ActivityInfoCache>() {
+            @Override
+            public int compare(ActivityInfoCache lhs, ActivityInfoCache rhs) {
+                return lhs.getTitle().compareTo(rhs.getTitle());
+            }
+        });
     }
 
     @Override
@@ -55,31 +63,27 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
 
     @Override
     public void onDestroy() {
-
+        mContext = null;
+        mAllappsContainerArray.clear();
+        listItemList.clear();
     }
 
     @Override
     public int getCount() {
-        int rows = listItemList.size() / ITEMS_PER_ROW;
-        return listItemList.size() % ITEMS_PER_ROW == 0 ? rows : rows + 1;
+        return listItemList.size();
     }
 
     @Override
     public RemoteViews getViewAt(int position) {
-        RemoteViews allAppListContainer = mAllappsContainerArray.get(position);
-        if (allAppListContainer == null) {
-            allAppListContainer = new RemoteViews(mContext.getPackageName(), R.layout.all_apps_widget_list_container);
-            for (int i = position * ITEMS_PER_ROW; i < (position + 1) * ITEMS_PER_ROW && i < listItemList.size(); ++i) {
-                RemoteViews icon = new RemoteViews(mContext.getPackageName(), R.layout.base_image_button);
-                icon.setImageViewBitmap(R.id.base_icon, listItemList.get(i).getBitmap());
-                allAppListContainer.addView(R.id.allapps_list_item_container, icon);
-            }
-            if (DEBUG) {
-                Log.d(TAG, "add position: " + position);
-            }
-            mAllappsContainerArray.put(position, allAppListContainer);
-        }
-        return allAppListContainer;
+        final ActivityInfoCache info = listItemList.get(position);
+        RemoteViews iconContainer = new RemoteViews(mContext.getPackageName(), R.layout.normal_app_icon_layout);
+        iconContainer.setImageViewBitmap(R.id.icon, info.getBitmap());
+        iconContainer.setTextViewText(R.id.title, info.getTitle());
+        Intent intent = new Intent();
+        intent.putExtra(AllappsWidgetProvider.ON_ALL_APPS_ITEM_CLICK_INDEX, position);
+        intent.putExtra(AllappsWidgetProvider.EXTRA_COMPONENTNAME, info.getComponentName().flattenToShortString());
+        iconContainer.setOnClickFillInIntent(R.id.normal_app_icon_container, intent);
+        return iconContainer;
     }
 
     @Override

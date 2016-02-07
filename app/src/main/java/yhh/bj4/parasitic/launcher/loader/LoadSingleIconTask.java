@@ -44,6 +44,7 @@ public class LoadSingleIconTask implements Runnable {
             icon.setTitle(title);
             icon.setBitmap(IconLoader.convertDrawableIconToBitmap(activityIcon));
             cn = new ComponentName(appInfo.activityInfo.packageName, appInfo.activityInfo.name);
+            icon.setComponentName(cn);
         } finally {
             mCallback.onFinishLoading(cn, icon);
         }
