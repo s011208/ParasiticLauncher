@@ -25,6 +25,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/parasitic_widget_info" />
         </receiver>
+        <!-- all apps widget components start-->
         <receiver android:name="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -34,9 +35,17 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/allapps_widget_info" />
         </receiver>
+        <activity
+            android:name=".widgets.allapps.AllappsWidgetConfiguration"
+            android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
         <service
             android:name="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <!-- all apps widget components end-->
     </application>
 
 </manifest>
