@@ -1,21 +1,31 @@
 package yhh.bj4.parasitic.launcher.loader;
 
+import android.annotation.TargetApi;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.UserHandle;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import yhh.bj4.parasitic.launcher.R;
+import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
 
 
 /**
@@ -26,6 +36,8 @@ public class IconLoader implements LoadIconHelper.Callback {
     private static final boolean DEBUG_TRACE = true;
     private static final String TAG = "IconLoader";
     public static final int ICON_TYPE_NORMAL = 1 << 1;
+    private int mIconDpi;
+    private final Bitmap mDefaultIcon;
     private static final HandlerThread sIconLoaderThread = new HandlerThread("Icon loader", android.os.Process.THREAD_PRIORITY_DEFAULT);
 
     static {
@@ -75,8 +87,24 @@ public class IconLoader implements LoadIconHelper.Callback {
         }
     }
 
+    private void applyIconPack() {
+        IconPackHelper.getInstance(mContext).reloadAllIconPackList();
+        Iterator<ComponentName> keys = mActivityInfoCache.keySet().iterator();
+        while (keys.hasNext()) {
+            final ComponentName key = keys.next();
+            final ActivityInfoCache cache = mActivityInfoCache.get(key);
+            int iconId = IconPackHelper.getInstance(mContext).getIconResIdViaComponentInfo("ComponentInfo{" + key.flattenToString() + "}");
+            if (iconId != -1) {
+                cache.setBitmap(IconLoader.convertDrawableIconToBitmap(IconPackHelper.getInstance(mContext).getSpecIconPackIcon(mContext, key, this)));
+            } else {
+                cache.setBitmap(IconLoader.convertDrawableIconToBitmap(IconPackHelper.getInstance(mContext).getUnspecIconForDefault(mContext, cache.getIcon())));
+            }
+        }
+    }
+
     @Override
     public void onFinishLoading() {
+        applyIconPack();
         for (WeakReference<Callback> wr : mCallbacks) {
             final Callback cb = wr.get();
             if (cb != null)
@@ -99,6 +127,10 @@ public class IconLoader implements LoadIconHelper.Callback {
 
     private IconLoader(Context context) {
         mContext = context.getApplicationContext();
+        ActivityManager activityManager =
+                (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        mIconDpi = activityManager.getLauncherLargeIconDensity();
+        mDefaultIcon = makeDefaultIcon();
         registerReceiver();
         initParams();
         startToLoadIcon();
@@ -140,6 +172,77 @@ public class IconLoader implements LoadIconHelper.Callback {
         canvas.setBitmap(b);
         d.draw(canvas);
         canvas.setBitmap(null);
+        return b;
+    }
+
+    public Drawable getFullResDefaultActivityIcon() {
+        return getFullResIcon(Resources.getSystem(),
+                android.R.mipmap.sym_def_app_icon, android.os.Process.myUserHandle());
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public Drawable getFullResIcon(Resources resources, int iconId, UserHandle user) {
+        Drawable d;
+        try {
+            d = resources.getDrawableForDensity(iconId, mIconDpi);
+        } catch (Resources.NotFoundException e) {
+            d = null;
+        }
+        if (d == null) {
+            d = getFullResDefaultActivityIcon();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return mContext.getPackageManager().getUserBadgedIcon(d, user);
+        } else {
+            return d;
+        }
+    }
+
+    public Drawable getFullResIcon(String packageName, int iconId, UserHandle user) {
+        Resources resources;
+        try {
+            resources = mContext.getPackageManager().getResourcesForApplication(packageName);
+        } catch (PackageManager.NameNotFoundException e) {
+            resources = null;
+        }
+        if (resources != null) {
+            if (iconId != 0) {
+                return getFullResIcon(resources, iconId, user);
+            }
+        }
+        return getFullResDefaultActivityIcon();
+    }
+
+    public Drawable getFullResIcon(ResolveInfo info, UserHandle user) {
+        return getFullResIcon(info.activityInfo, user);
+    }
+
+    public Drawable getFullResIcon(ActivityInfo info, UserHandle user) {
+        Resources resources;
+        try {
+            resources = mContext.getPackageManager().getResourcesForApplication(
+                    info.applicationInfo);
+        } catch (PackageManager.NameNotFoundException e) {
+            resources = null;
+        }
+        if (resources != null) {
+            int iconId = info.getIconResource();
+            if (iconId != 0) {
+                return getFullResIcon(resources, iconId, user);
+            }
+        }
+        return getFullResDefaultActivityIcon();
+    }
+
+    private Bitmap makeDefaultIcon() {
+        Drawable d = getFullResDefaultActivityIcon();
+        Bitmap b = Bitmap.createBitmap(Math.max(d.getIntrinsicWidth(), 1),
+                Math.max(d.getIntrinsicHeight(), 1),
+                Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        d.setBounds(0, 0, b.getWidth(), b.getHeight());
+        d.draw(c);
+        c.setBitmap(null);
         return b;
     }
 }

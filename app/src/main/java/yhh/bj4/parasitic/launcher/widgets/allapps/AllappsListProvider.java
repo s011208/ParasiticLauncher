@@ -22,7 +22,6 @@ import yhh.bj4.parasitic.launcher.loader.IconLoader;
 public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactory {
     private static final String TAG = "AllappsListProvider";
     private static final boolean DEBUG = true;
-    private static final int ITEMS_PER_ROW = 5;
     private ArrayList<ActivityInfoCache> listItemList = new ArrayList<>();
     private SparseArray<RemoteViews> mAllappsContainerArray = new SparseArray<>();
     private Context mContext;

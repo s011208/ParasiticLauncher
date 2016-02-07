@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="icon_pack_intent_action_list">
+        <item name="asus">com.asus.launcher.intent.action.ICONPACK_CHANGE</item>
+        <item name="apex">android.intent.action.MAIN</item>
+        <item name="adw">org.adw.launcher.THEMES</item>
+        <item name="nova">android.intent.action.MAIN</item>
+    </string-array>
+
+    <string-array name="icon_pack_intent_category_list">
+        <item name="asus">android.intent.category.DEFAULT</item>
+        <item name="apex">com.anddoes.launcher.THEME</item>
+        <item name="adw">android.intent.category.DEFAULT</item>
+        <item name="nova">com.teslacoilsw.launcher.THEME</item>
+    </string-array>
+
+    <string-array name="default_bg_list_icon_pack_preview_thumb">
+        <item name="bg_1">wallpaper_bg1</item>
+        <item name="bg_2">wallpaper_bg2</item>
+        <item name="bg_3">wallpaper_bg3</item>
+        <item name="bg_4">wallpaper_bg4</item>
+        <item name="bg_5">wallpaper_bg5</item>
+        <item name="bg_6">wallpaper_bg6</item>
+    </string-array>
+</resources>
