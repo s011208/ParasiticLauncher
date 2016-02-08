@@ -3,6 +3,7 @@ package yhh.bj4.parasitic.launcher.widgets.allapps;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.SparseArray;
 import android.widget.RemoteViews;
@@ -19,18 +20,24 @@ import yhh.bj4.parasitic.launcher.loader.IconLoader;
 /**
  * Created by yenhsunhuang on 2016/2/6.
  */
-public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactory {
+public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactory, IconLoader.Callback {
     private static final String TAG = "AllappsListProvider";
     private static final boolean DEBUG = true;
     private ArrayList<ActivityInfoCache> listItemList = new ArrayList<>();
     private SparseArray<RemoteViews> mAllappsContainerArray = new SparseArray<>();
     private Context mContext;
     private final int mAppWidgetId;
+    private final SharedPreferences mPrefs;
+    private String mApplyIconPackPkg;
+    private final IconLoader mIconLoader;
 
     public AllappsListProvider(Context context, Intent intent) {
         mContext = context;
+        mIconLoader = IconLoader.getInstance(mContext);
+        mIconLoader.addCallback(this);
         mAppWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID);
+        mPrefs = context.getSharedPreferences(AllappsWidgetConfigurePreference.class.getSimpleName() + String.valueOf(mAppWidgetId), Context.MODE_PRIVATE);
     }
 
     @Override
@@ -41,12 +48,22 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     }
 
     private void loadData() {
+        mApplyIconPackPkg = mPrefs.getString(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_PACK_PKG, IconLoader.ICON_PACK_DEFAULT);
         if (DEBUG) {
-            Log.d(TAG, "loadData");
+            Log.d(TAG, "loadData, icon pack: " + mApplyIconPackPkg);
         }
+
         listItemList.clear();
         mAllappsContainerArray.clear();
-        listItemList.addAll(IconLoader.getInstance(mContext).getAllActivitiesInfoCache().values());
+        if (mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg) == null) {
+            listItemList.addAll(mIconLoader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+            mIconLoader.requestToLoadIconPack(mApplyIconPackPkg);
+            if (DEBUG) {
+                Log.d(TAG, "request to load: " + mApplyIconPackPkg);
+            }
+        } else {
+            listItemList.addAll(mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).values());
+        }
         Collections.sort(listItemList, new Comparator<ActivityInfoCache>() {
             @Override
             public int compare(ActivityInfoCache lhs, ActivityInfoCache rhs) {
@@ -103,5 +120,12 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     @Override
     public boolean hasStableIds() {
         return false;
+    }
+
+    @Override
+    public void onRefresh(String iconPackPkgName) {
+        if (iconPackPkgName.equals(mApplyIconPackPkg)) {
+            AllappsWidgetProvider.notifyDataSetChanged(mContext, mAppWidgetId);
+        }
     }
 }

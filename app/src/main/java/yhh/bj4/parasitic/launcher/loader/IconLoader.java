@@ -18,20 +18,21 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.UserHandle;
+import android.util.Log;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import yhh.bj4.parasitic.launcher.R;
+import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
 
 
 /**
  * Created by Yen-Hsun_Huang on 2016/2/5.
  */
-public class IconLoader implements LoadIconHelper.Callback {
+public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callback {
     private static final boolean DEBUG = true;
     private static final boolean DEBUG_TRACE = true;
     private static final String TAG = "IconLoader";
@@ -39,6 +40,7 @@ public class IconLoader implements LoadIconHelper.Callback {
     private int mIconDpi;
     private final Bitmap mDefaultIcon;
     private static final HandlerThread sIconLoaderThread = new HandlerThread("Icon loader", android.os.Process.THREAD_PRIORITY_DEFAULT);
+    public static final String ICON_PACK_DEFAULT = "icon_pack_default";
 
     static {
         sIconLoaderThread.start();
@@ -50,10 +52,9 @@ public class IconLoader implements LoadIconHelper.Callback {
 
     private final Context mContext;
 
-    private final HashMap<ComponentName, ActivityInfoCache> mActivityInfoCache = new HashMap<>();
+    private final HashMap<String, HashMap<ComponentName, ActivityInfoCache>> mActivityInfoCache = new HashMap<>();
 
     private static int sDefaultIconSize;
-    private boolean isLoaded = false;
     private final ArrayList<WeakReference<Callback>> mCallbacks = new ArrayList<>();
     private LoadIconHelper mLoadIconHelper;
 
@@ -87,38 +88,70 @@ public class IconLoader implements LoadIconHelper.Callback {
         }
     }
 
-    private void applyIconPack() {
-        IconPackHelper.getInstance(mContext).reloadAllIconPackList();
-        Iterator<ComponentName> keys = mActivityInfoCache.keySet().iterator();
-        while (keys.hasNext()) {
-            final ComponentName key = keys.next();
-            final ActivityInfoCache cache = mActivityInfoCache.get(key);
-            int iconId = IconPackHelper.getInstance(mContext).getIconResIdViaComponentInfo("ComponentInfo{" + key.flattenToString() + "}");
-            if (iconId != -1) {
-                cache.setBitmap(IconLoader.convertDrawableIconToBitmap(IconPackHelper.getInstance(mContext).getSpecIconPackIcon(mContext, key, this)));
-            } else {
-                cache.setBitmap(IconLoader.convertDrawableIconToBitmap(IconPackHelper.getInstance(mContext).getUnspecIconForDefault(mContext, cache.getIcon())));
-            }
-        }
-    }
-
     @Override
-    public void onFinishLoading() {
-        applyIconPack();
+    public void onIconFinishLoading(final String iconPackPkgName) {
         for (WeakReference<Callback> wr : mCallbacks) {
             final Callback cb = wr.get();
             if (cb != null)
                 runOnMainThread(new Runnable() {
                     @Override
                     public void run() {
-                        cb.onRefresh();
+                        cb.onRefresh(iconPackPkgName);
                     }
                 });
         }
     }
 
+    @Override
+    public void onIconPackLoadStart() {
+        if (DEBUG) {
+            Log.d(TAG, "onIconPackLoadStart");
+        }
+    }
+
+    @Override
+    public void onIconPackLoadFinish() {
+        if (DEBUG) {
+            Log.d(TAG, "onIconPackLoadFinish");
+        }
+        for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
+            Log.d(TAG, "pack: " + pack.getIconPackPackageName() + ", title: " + pack.getIconPackPackageTitle());
+        }
+    }
+
+    @Override
+    public void onStartToLoadIconPackContent(String iconPackPkgName) {
+        if (DEBUG) {
+            Log.d(TAG, "onStartToLoadIconPackContent, iconPackPkgName: " + iconPackPkgName);
+        }
+    }
+
+    @Override
+    public void onFinishToLoadIconPackContent(String iconPackPkgName) {
+        if (DEBUG) {
+            Log.d(TAG, "onFinishToLoadIconPackContent, iconPackPkgName: " + iconPackPkgName);
+        }
+        startToLoadIcon(iconPackPkgName);
+    }
+
     public interface Callback {
-        void onRefresh();
+        void onRefresh(String iconPackPkgName);
+    }
+
+    public void requestToLoadIconPack(final String pkg) {
+        requestToLoadIconPack(pkg, false);
+    }
+
+    public void requestToLoadIconPack(final String pkg, final boolean force) {
+        final IconPackHelper helper = IconPackHelper.getInstance(mContext);
+        if (force) {
+            helper.loadIconPackContent(pkg);
+        } else {
+            if (helper.hasIconPackLoaded(pkg)) {
+                return;
+            }
+            helper.loadIconPackContent(pkg);
+        }
     }
 
     private void initParams() {
@@ -133,7 +166,14 @@ public class IconLoader implements LoadIconHelper.Callback {
         mDefaultIcon = makeDefaultIcon();
         registerReceiver();
         initParams();
-        startToLoadIcon();
+        startToLoadIcon(ICON_PACK_DEFAULT);
+        IconPackHelper.getInstance(mContext).addCallback(this);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IconPackHelper.getInstance(mContext).reloadAllIconPackList();
+            }
+        }).start();
     }
 
     private void registerReceiver() {
@@ -149,20 +189,23 @@ public class IconLoader implements LoadIconHelper.Callback {
         mCallbacks.add(new WeakReference(cb));
     }
 
-    private void startToLoadIcon() {
+    private void startToLoadIcon(String iconPackPkg) {
         if (mLoadIconHelper != null) {
             sWorker.removeCallbacks(mLoadIconHelper);
         }
-        mLoadIconHelper = new LoadIconHelper(mContext, mActivityInfoCache, IconLoader.this);
+        HashMap<ComponentName, ActivityInfoCache> map = new HashMap<>();
+        mActivityInfoCache.put(iconPackPkg, map);
+        mLoadIconHelper = new LoadIconHelper(mContext, iconPackPkg, map, IconLoader.this, IconLoader.this);
         sWorker.post(mLoadIconHelper);
     }
 
-    public ActivityInfoCache getActivityInfo(ComponentName cn, int iconType) {
-        return mActivityInfoCache.get(cn);
+    public ActivityInfoCache getActivityInfo(String iconPackPkg, ComponentName cn, int iconType) {
+        return mActivityInfoCache.get(iconPackPkg).get(cn);
     }
 
-    public HashMap<ComponentName, ActivityInfoCache> getAllActivitiesInfoCache() {
-        return new HashMap<>(mActivityInfoCache);
+    public HashMap<ComponentName, ActivityInfoCache> getAllActivitiesInfoCache(String iconPackPkg) {
+        if (mActivityInfoCache.get(iconPackPkg) == null) return null;
+        return new HashMap<>(mActivityInfoCache.get(iconPackPkg));
     }
 
     public static Bitmap convertDrawableIconToBitmap(Drawable d) {

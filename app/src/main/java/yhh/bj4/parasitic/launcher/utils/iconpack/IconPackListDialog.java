@@ -65,6 +65,11 @@ public class IconPackListDialog extends DialogFragment {
         return mDialog;
     }
 
+    @Override
+    public void onDestroy() {
+        mAdapter.destroy();
+        super.onDestroy();
+    }
 
     private static class IconPackAdapter extends BaseAdapter implements IconPackHelper.Callback {
         private final LayoutInflater mInflater;
@@ -76,6 +81,10 @@ public class IconPackListDialog extends DialogFragment {
             mIconPackHelper = helper;
             mIconPackHelper.addCallback(this);
             mIconPackList = new ArrayList<>(mIconPackHelper.getIconPackList());
+        }
+
+        public void destroy() {
+            mIconPackHelper.removeCallback(this);
         }
 
         @Override
@@ -111,15 +120,25 @@ public class IconPackListDialog extends DialogFragment {
         }
 
         @Override
-        public void onLoadStart() {
+        public void onIconPackLoadStart() {
 
         }
 
         @Override
-        public void onLoadFinish() {
+        public void onIconPackLoadFinish() {
             mIconPackList.clear();
             mIconPackList.addAll(mIconPackHelper.getIconPackList());
             notifyDataSetChanged();
+        }
+
+        @Override
+        public void onStartToLoadIconPackContent(String iconPackPkgName) {
+
+        }
+
+        @Override
+        public void onFinishToLoadIconPackContent(String iconPackPkgName) {
+
         }
 
         private static class ViewHolder {

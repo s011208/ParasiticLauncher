@@ -27,11 +27,11 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
@@ -42,6 +42,7 @@ import yhh.bj4.parasitic.launcher.loader.IconLoader;
 public class IconPackHelper {
     private static final String TAG = "IconPackHelper";
     private static final boolean DEBUG = true;
+    private static final boolean DEBUG_APPFILTER = false;
     private static final int NUM_INFINITE = -1;
     private static final int ICON_ARRAYLIST_UPPER_BOUND = 10;
 
@@ -49,15 +50,22 @@ public class IconPackHelper {
 
     private final ArrayList<IconPack> mIconPackList = new ArrayList<>();
 
-    private final ArrayList<WeakReference<Callback>> mCallbacks = new ArrayList<>();
+    private final ArrayList<Callback> mCallbacks = new ArrayList<>();
 
-    private AppFilterInfo mAppFilterInfo;
-    private String mIconPackPkg;
+    private final HashMap<String, AppFilterInfo> mAppFilterInfos = new HashMap<>();
+
+    private final AtomicBoolean mIsLoadingIconPackList = new AtomicBoolean(false);
+
+    private final ArrayList<String> mLoadingIconPackList = new ArrayList<>();
 
     public interface Callback {
-        void onLoadStart();
+        void onIconPackLoadStart();
 
-        void onLoadFinish();
+        void onIconPackLoadFinish();
+
+        void onStartToLoadIconPackContent(String iconPackPkgName);
+
+        void onFinishToLoadIconPackContent(String iconPackPkgName);
     }
 
     private IconPackHelper(Context context) {
@@ -70,7 +78,14 @@ public class IconPackHelper {
 
     public void addCallback(Callback cb) {
         if (cb == null) return;
-        mCallbacks.add(new WeakReference<>(cb));
+        synchronized (mCallbacks) {
+            removeCallback(cb);
+            mCallbacks.add(cb);
+        }
+    }
+
+    public void removeCallback(Callback cb) {
+        while (mCallbacks.contains(cb)) mCallbacks.remove(cb);
     }
 
     public synchronized static IconPackHelper getInstance(Context context) {
@@ -82,23 +97,53 @@ public class IconPackHelper {
 
     private final Context mContext;
 
-    private AppFilterInfo loadIconPackContent(final String iconPackPkgName) {
+    public void loadIconPackContent(final String iconPackPkgName) {
+        synchronized (mLoadingIconPackList) {
+            if (mLoadingIconPackList.contains(mLoadingIconPackList))
+                return;
+            mLoadingIconPackList.add(iconPackPkgName);
+        }
+        synchronized (mCallbacks) {
+            for (Callback cb : mCallbacks) {
+                cb.onStartToLoadIconPackContent(iconPackPkgName);
+            }
+        }
         final AppFilterInfo info = readAppFilter(mContext,
                 iconPackPkgName,
                 NUM_INFINITE,
                 ICON_ARRAYLIST_UPPER_BOUND);
-        return info;
+        synchronized (mAppFilterInfos) {
+            mAppFilterInfos.put(iconPackPkgName, info);
+        }
+        synchronized (mCallbacks) {
+            for (Callback cb : mCallbacks) {
+                cb.onFinishToLoadIconPackContent(iconPackPkgName);
+            }
+        }
+        synchronized (mLoadingIconPackList) {
+            mLoadingIconPackList.remove(iconPackPkgName);
+        }
+    }
+
+    public boolean hasIconPackLoaded(final String iconPackPkgName) {
+        synchronized (mAppFilterInfos) {
+            return mAppFilterInfos.get(iconPackPkgName) != null;
+        }
     }
 
     public void reloadAllIconPackList() {
+        synchronized (mCallbacks) {
+            for (Callback cb : mCallbacks) {
+                cb.onIconPackLoadStart();
+            }
+        }
         synchronized (mIconPackList) {
             mIconPackList.clear();
         }
-        for (WeakReference<Callback> wr : mCallbacks) {
-            Callback cb = wr.get();
-            if (cb == null) continue;
-            cb.onLoadStart();
+        synchronized (mAppFilterInfos) {
+            mAppFilterInfos.clear();
         }
+        mIsLoadingIconPackList.set(true);
         ArrayList<String> iconPackPkgs = new ArrayList<>();
         String[] actionList = mContext.getResources().getStringArray(R.array.icon_pack_intent_action_list);
         String[] categoryList = mContext.getResources().getStringArray(R.array.icon_pack_intent_category_list);
@@ -115,8 +160,6 @@ public class IconPackHelper {
                     iconPackPkgs.add(info.activityInfo.packageName);
                     synchronized (mIconPackList) {
                         mIconPackList.add(new IconPack(appTitle, pkgName, icon));
-                        mAppFilterInfo = loadIconPackContent(pkgName);
-                        mIconPackPkg = pkgName;
                     }
                 }
             }
@@ -126,17 +169,18 @@ public class IconPackHelper {
                 Log.d(TAG, "pkg: " + pkg);
             }
         }
-        for (WeakReference<Callback> wr : mCallbacks) {
-            Callback cb = wr.get();
-            if (cb == null) continue;
-            cb.onLoadFinish();
+        mIsLoadingIconPackList.set(false);
+        synchronized (mCallbacks) {
+            for (Callback cb : mCallbacks) {
+                cb.onIconPackLoadFinish();
+            }
         }
     }
 
-    public AppFilterInfo readAppFilter(Context context,
-                                       final String iconPackPkgName,
-                                       final int specItemsLengthLimit,
-                                       final int unspecItemsLengthLimit) {
+    private AppFilterInfo readAppFilter(Context context,
+                                        final String iconPackPkgName,
+                                        final int specItemsLengthLimit,
+                                        final int unspecItemsLengthLimit) {
         AppFilterInfo info = new AppFilterInfo();
         try {
             PackageManager pm = context.getPackageManager();
@@ -149,7 +193,7 @@ public class IconPackHelper {
                     while (xrp.getEventType() != XmlResourceParser.END_DOCUMENT) {
                         if (xrp.getEventType() == XmlResourceParser.START_TAG) {
                             String name = xrp.getName();
-                            if (DEBUG) {
+                            if (DEBUG_APPFILTER) {
                                 Log.v(TAG, "name= " + name);
                             }
                             if (name.equals("item")) {
@@ -160,7 +204,7 @@ public class IconPackHelper {
                                         int drawableResId = res.getIdentifier(drawableName, "drawable", iconPackPkgName);
                                         if (drawableResId != -1) {
                                             String componentInfo = xrp.getAttributeValue(null, "component");
-                                            if (DEBUG) {
+                                            if (DEBUG_APPFILTER) {
                                                 Log.v(TAG, "valid componentInfo= "
                                                         + componentInfo + ", drawableName= " + drawableName
                                                         + ", drawableResId= " + drawableResId);
@@ -174,7 +218,7 @@ public class IconPackHelper {
                                                         info.mSpecIconComponentInfoToResId.put(componentInfo, drawableResId);
                                                     }
                                                 } catch (Exception e) {
-                                                    if (DEBUG) {
+                                                    if (DEBUG_APPFILTER) {
                                                         Log.v(TAG, "NULL drawable, drawableName="
                                                                 + drawableName + ", drawableResId= " + drawableResId
                                                                 + ", iconPackPkg= " + iconPackPkgName);
@@ -187,7 +231,7 @@ public class IconPackHelper {
                             } else if (name.equals("iconback")
                                     && (unspecItemsLengthLimit == NUM_INFINITE
                                     || info.mIconBackgroundBitmaps.size() < unspecItemsLengthLimit)) {
-                                if (DEBUG) {
+                                if (DEBUG_APPFILTER) {
                                     Log.v(TAG, "iconback xrp.getAttributeCount()= " + xrp.getAttributeCount());
                                 }
                                 if (xrp.getAttributeCount() > 0) {
@@ -196,7 +240,7 @@ public class IconPackHelper {
                                         if (drawableName != null) {
                                             int drawableResId = res.getIdentifier(drawableName, "drawable", iconPackPkgName);
                                             if (drawableResId != -1) {
-                                                if (DEBUG) {
+                                                if (DEBUG_APPFILTER) {
                                                     Log.v(TAG, "valid iconback drawableName= " + drawableName);
                                                 }
                                                 Bitmap iconBack = getBitmapByResId(res, drawableResId);
@@ -210,7 +254,7 @@ public class IconPackHelper {
                             } else if (name.equals("iconupon")
                                     && (unspecItemsLengthLimit == NUM_INFINITE
                                     || info.mIconOverlayDrawables.size() < unspecItemsLengthLimit)) {
-                                if (DEBUG) {
+                                if (DEBUG_APPFILTER) {
                                     Log.v(TAG, "iconupon xrp.getAttributeCount()= " + xrp.getAttributeCount());
                                 }
                                 if (xrp.getAttributeCount() > 0) {
@@ -219,7 +263,7 @@ public class IconPackHelper {
                                         if (drawableName != null) {
                                             int drawableResId = res.getIdentifier(drawableName, "drawable", iconPackPkgName);
                                             if (drawableResId != -1) {
-                                                if (DEBUG) {
+                                                if (DEBUG_APPFILTER) {
                                                     Log.v(TAG, "valid iconupon drawableName= " + drawableName);
                                                 }
                                                 try {
@@ -238,7 +282,7 @@ public class IconPackHelper {
                             } else if (name.equals("iconmask")
                                     && (unspecItemsLengthLimit == NUM_INFINITE
                                     || info.mIconMaskBitmaps.size() < unspecItemsLengthLimit)) {
-                                if (DEBUG) {
+                                if (DEBUG_APPFILTER) {
                                     Log.v(TAG, "iconmask xrp.getAttributeCount()= " + xrp.getAttributeCount());
                                 }
                                 if (xrp.getAttributeCount() > 0) {
@@ -247,7 +291,7 @@ public class IconPackHelper {
                                         if (drawableName != null) {
                                             int drawableResId = res.getIdentifier(drawableName, "drawable", iconPackPkgName);
                                             if (drawableResId != -1) {
-                                                if (DEBUG) {
+                                                if (DEBUG_APPFILTER) {
                                                     Log.v(TAG, "valid iconmask drawableName= " + drawableName);
                                                 }
                                                 Bitmap iconMask = getBitmapByResId(res, drawableResId);
@@ -264,7 +308,7 @@ public class IconPackHelper {
                                     try {
                                         Float scale = Float.parseFloat(scaleFactor);
                                         if (scale > 0) {
-                                            if (DEBUG) {
+                                            if (DEBUG_APPFILTER) {
                                                 Log.v(TAG, "valid iconscale= " + scale);
                                             }
                                             info.mIconScale = scale;
@@ -283,17 +327,17 @@ public class IconPackHelper {
                     Log.i(TAG, "readAppfilter warning info: ", e);
                 }
 
-                if (DEBUG) {
+                if (DEBUG_APPFILTER) {
                     Log.v(TAG, info.toString());
                 }
             } else {
-                if (DEBUG) {
+                if (DEBUG_APPFILTER) {
                     Log.v(TAG, "Xml not found");
                 }
             }
 
         } catch (PackageManager.NameNotFoundException e) {
-            if (DEBUG) {
+            if (DEBUG_APPFILTER) {
                 Log.v(TAG, "Package not found : " + iconPackPkgName);
             }
         }
@@ -369,13 +413,11 @@ public class IconPackHelper {
         }
     }
 
-    public Drawable getSpecIconPackIcon(Context context, final ComponentName componentName, IconLoader loader) {
-        // Use defined icon in pkg here
-        String iconPackPkgName = mIconPackPkg;
+    public Drawable getSpecIconPackIcon(Context context, String iconPackPkgName, final ComponentName componentName, IconLoader loader) {
         if (iconPackPkgName != null) {
             try {
                 Resources resources = context.getPackageManager().getResourcesForApplication(iconPackPkgName);
-                int iconId = getIconResIdViaComponentInfo("ComponentInfo{" + componentName.flattenToString() + "}");
+                int iconId = getIconResIdViaComponentInfo("ComponentInfo{" + componentName.flattenToString() + "}", iconPackPkgName);
                 if (iconId != -1) {
                     return loader.getFullResIcon(resources, iconId, null);
                 }
@@ -386,10 +428,8 @@ public class IconPackHelper {
         return null;
     }
 
-    public Integer getIconResIdViaComponentInfo(String key) {
-        // Be careful about that Hashmap.get method would return NULL
-        // if no mapping for the specified key is found.
-        final Object rtn = mAppFilterInfo.mSpecIconComponentInfoToResId.get(key);
+    public Integer getIconResIdViaComponentInfo(String key, String iconPackPkgName) {
+        final Object rtn = mAppFilterInfos.get(iconPackPkgName).mSpecIconComponentInfoToResId.get(key);
         return rtn != null ? (Integer) rtn : -1;
     }
 
@@ -474,7 +514,7 @@ public class IconPackHelper {
         canvas.setBitmap(null);
     }
 
-    public Drawable getUnspecIconForDefault(Context context, final Drawable icon) {
+    public Drawable getUnspecIconForDefault(Context context, final Drawable icon, final String iconPackPkgName) {
         final Bitmap iconBitmap = ((BitmapDrawable) icon).getBitmap();
         final int iconWidth = iconBitmap.getWidth();
         final int iconHeight = iconBitmap.getHeight();
@@ -491,7 +531,7 @@ public class IconPackHelper {
                 iconWidth, iconHeight,
                 iconWidth, iconHeight,
                 random.nextInt(10),
-                mAppFilterInfo);
+                mAppFilterInfos.get(iconPackPkgName));
         canvas.setBitmap(null);
         return new BitmapDrawable(context.getResources(), bitmap);
     }

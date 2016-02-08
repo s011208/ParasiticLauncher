@@ -65,6 +65,7 @@ public class AllappsWidgetConfigurationActivity extends Activity {
         Intent resultValue = new Intent();
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
         setResult(RESULT_OK, resultValue);
+        AllappsWidgetProvider.notifyDataSetChanged(this, mAppWidgetId);
     }
 
     @Override

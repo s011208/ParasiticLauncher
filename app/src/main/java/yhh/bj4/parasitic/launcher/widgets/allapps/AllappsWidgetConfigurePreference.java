@@ -22,9 +22,9 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     private static final int REQUEST_ICON_PACK = 1;
     private static final int REQUEST_ICON_SIZE = 2;
 
-    private static final String SPREF_KEY_ICON_SIZE = "icon_size";
-    private static final String SPREF_KEY_ICON_PACK_PKG = "icon_pack_pkg";
-    private static final String SPREF_KEY_ICON_PACK_TITLE = "icon_pack_title";
+    public static final String SPREF_KEY_ICON_SIZE = "icon_size";
+    public static final String SPREF_KEY_ICON_PACK_PKG = "icon_pack_pkg";
+    public static final String SPREF_KEY_ICON_PACK_TITLE = "icon_pack_title";
 
     private int mIconSize = IconSizeListDialog.ICON_SIZE_NORMAL;
     private String mIconPackPackageName;

@@ -62,7 +62,7 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
         Log.d(TAG, "onAppWidgetOptionsChanged");
     }
 
-    private RemoteViews updateWidgetListView(Context context,
+    public static RemoteViews updateWidgetListView(Context context,
                                              int appWidgetId) {
         if (DEBUG) {
             Log.d(TAG, "updateWidgetListView with id: " + appWidgetId);
@@ -82,5 +82,10 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
         remoteViews.setRemoteAdapter(R.id.allapps_list,
                 svcIntent);
         return remoteViews;
+    }
+
+    public static void notifyDataSetChanged(Context context, int appWidgetId) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        manager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.allapps_list);
     }
 }
