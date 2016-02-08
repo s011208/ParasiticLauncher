@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.SparseArray;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -19,6 +20,7 @@ import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
+import yhh.bj4.parasitic.launcher.utils.iconsize.IconSizeListDialog;
 
 /**
  * Created by yenhsunhuang on 2016/2/6.
@@ -34,6 +36,8 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private String mApplyIconPackPkg;
     private final IconLoader mIconLoader;
     private boolean mShowIcon = true;
+    private int mTextSizeIndex = IconSizeListDialog.ICON_SIZE_NORMAL;
+    private int mTextSize;
 
     public AllappsListProvider(Context context, Intent intent) {
         mContext = context;
@@ -51,8 +55,23 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private void loadData() {
         mApplyIconPackPkg = mPrefs.getString(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_PACK_PKG, IconLoader.ICON_PACK_DEFAULT);
         mShowIcon = mPrefs.getBoolean(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_VISIBILITY, true);
+        mTextSizeIndex = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, IconSizeListDialog.ICON_SIZE_NORMAL);
+        switch (mTextSizeIndex) {
+            case IconSizeListDialog.ICON_SIZE_SMALL:
+                mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.small_app_icon_layout_title_text_size);
+                break;
+            case IconSizeListDialog.ICON_SIZE_NORMAL:
+                mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_app_icon_layout_title_text_size);
+                break;
+            case IconSizeListDialog.ICON_SIZE_LARGE:
+                mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.large_app_icon_layout_title_text_size);
+                break;
+            default:
+                mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_app_icon_layout_title_text_size);
+        }
         if (DEBUG) {
-            Log.i(TAG, "loadData, icon pack: " + mApplyIconPackPkg + ", mShowIcon: " + mShowIcon);
+            Log.i(TAG, "loadData, icon pack: " + mApplyIconPackPkg + ", mShowIcon: " + mShowIcon
+                    + ", mTextSizeIndex: " + mTextSizeIndex);
         }
         boolean find = false;
         for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
@@ -108,6 +127,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         iconContainer.setImageViewBitmap(R.id.icon, info.getBitmap());
         iconContainer.setTextViewText(R.id.title, info.getTitle());
         iconContainer.setViewVisibility(R.id.title, mShowIcon ? View.VISIBLE : View.GONE);
+        iconContainer.setTextViewTextSize(R.id.title, TypedValue.COMPLEX_UNIT_PX, mTextSize);
         Intent intent = new Intent();
         intent.putExtra(AllappsWidgetProvider.ON_ALL_APPS_ITEM_CLICK_INDEX, position);
         intent.putExtra(AllappsWidgetProvider.EXTRA_COMPONENTNAME, info.getComponentName().flattenToShortString());
