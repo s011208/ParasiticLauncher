@@ -3,6 +3,7 @@ package yhh.bj4.parasitic.launcher.widgets.allapps;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
 import android.util.Log;
@@ -15,9 +16,10 @@ import yhh.bj4.parasitic.launcher.widgets.BaseWidgetPreferenceFragment;
 /**
  * Created by yenhsunhuang on 2016/2/7.
  */
-public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragment {
+public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragment implements Preference.OnPreferenceChangeListener {
     private static final String KEY_ICON_PACK = "icon_pack";
     private static final String KEY_ICON_SIZE = "icon_size";
+    private static final String KEY_APP_TITLE_VISIBILITY = "app_title_visibility";
 
     private static final int REQUEST_ICON_PACK = 1;
     private static final int REQUEST_ICON_SIZE = 2;
@@ -25,10 +27,12 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     public static final String SPREF_KEY_ICON_SIZE = "icon_size";
     public static final String SPREF_KEY_ICON_PACK_PKG = "icon_pack_pkg";
     public static final String SPREF_KEY_ICON_PACK_TITLE = "icon_pack_title";
+    public static final String SPREF_KEY_ICON_VISIBILITY = KEY_APP_TITLE_VISIBILITY;
 
     private int mIconSize = IconSizeListDialog.ICON_SIZE_NORMAL;
     private String mIconPackPackageName;
     private String mIconPackTitle;
+    private boolean mIconVisibility;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -36,6 +40,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         addPreferencesFromResource(R.xml.pref_allapps_widget_configuration);
         setIconPackSummary();
         setIconSizeSummary();
+        initIconVisiblityPreference();
     }
 
     private void setIconPackSummary() {
@@ -61,6 +66,13 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
                 break;
         }
         pref.setSummary(summaryRes);
+    }
+
+    private void initIconVisiblityPreference() {
+        CheckBoxPreference pref = (CheckBoxPreference) findPreference(KEY_APP_TITLE_VISIBILITY);
+        if (pref == null) return;
+        mIconVisibility = pref.isChecked();
+        pref.setOnPreferenceChangeListener(this);
     }
 
     @Override
@@ -90,6 +102,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -112,5 +125,16 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
                 putPreferenceValue(SPREF_KEY_ICON_SIZE, mIconSize);
             }
         }
+    }
+
+    @Override
+    public boolean onPreferenceChange(Preference preference, Object newValue) {
+        final String key = preference.getKey();
+        if (KEY_APP_TITLE_VISIBILITY.equals(key)) {
+            mIconVisibility = (Boolean) newValue;
+            putPreferenceValue(SPREF_KEY_ICON_VISIBILITY, mIconVisibility);
+            return true;
+        }
+        return false;
     }
 }

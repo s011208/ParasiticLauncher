@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -32,6 +33,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private final SharedPreferences mPrefs;
     private String mApplyIconPackPkg;
     private final IconLoader mIconLoader;
+    private boolean mShowIcon = true;
 
     public AllappsListProvider(Context context, Intent intent) {
         mContext = context;
@@ -48,8 +50,9 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
 
     private void loadData() {
         mApplyIconPackPkg = mPrefs.getString(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_PACK_PKG, IconLoader.ICON_PACK_DEFAULT);
+        mShowIcon = mPrefs.getBoolean(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_VISIBILITY, true);
         if (DEBUG) {
-            Log.d(TAG, "loadData, icon pack: " + mApplyIconPackPkg);
+            Log.i(TAG, "loadData, icon pack: " + mApplyIconPackPkg + ", mShowIcon: " + mShowIcon);
         }
         boolean find = false;
         for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
@@ -104,6 +107,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         RemoteViews iconContainer = new RemoteViews(mContext.getPackageName(), R.layout.normal_app_icon_layout);
         iconContainer.setImageViewBitmap(R.id.icon, info.getBitmap());
         iconContainer.setTextViewText(R.id.title, info.getTitle());
+        iconContainer.setViewVisibility(R.id.title, mShowIcon ? View.VISIBLE : View.GONE);
         Intent intent = new Intent();
         intent.putExtra(AllappsWidgetProvider.ON_ALL_APPS_ITEM_CLICK_INDEX, position);
         intent.putExtra(AllappsWidgetProvider.EXTRA_COMPONENTNAME, info.getComponentName().flattenToShortString());

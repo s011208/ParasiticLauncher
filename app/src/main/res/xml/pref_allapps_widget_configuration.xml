@@ -7,5 +7,9 @@
         <Preference
             android:key="icon_size"
             android:title="@string/icon_size"></Preference>
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="app_title_visibility"
+            android:title="@string/app_title_visibility"></CheckBoxPreference>
     </PreferenceCategory>
 </PreferenceScreen>
