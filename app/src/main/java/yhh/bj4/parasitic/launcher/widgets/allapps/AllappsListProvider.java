@@ -16,6 +16,8 @@ import java.util.Comparator;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
+import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
+import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
 
 /**
  * Created by yenhsunhuang on 2016/2/6.
@@ -42,9 +44,6 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
 
     @Override
     public void onCreate() {
-        if (DEBUG) {
-            Log.d(TAG, "onCreate");
-        }
     }
 
     private void loadData() {
@@ -52,7 +51,17 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         if (DEBUG) {
             Log.d(TAG, "loadData, icon pack: " + mApplyIconPackPkg);
         }
-
+        boolean find = false;
+        for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
+            if (pack.getIconPackPackageName().equals(mApplyIconPackPkg)) {
+                find = true;
+                break;
+            }
+        }
+        if (!find && mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg) == null) {
+            // use default if not find
+            mApplyIconPackPkg = IconLoader.ICON_PACK_DEFAULT;
+        }
         listItemList.clear();
         mAllappsContainerArray.clear();
         if (mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg) == null) {
@@ -125,7 +134,8 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     @Override
     public void onRefresh(String iconPackPkgName) {
         if (iconPackPkgName.equals(mApplyIconPackPkg)) {
-            AllappsWidgetProvider.notifyDataSetChanged(mContext, mAppWidgetId);
+            AppWidgetManager manager = AppWidgetManager.getInstance(mContext);
+            manager.notifyAppWidgetViewDataChanged(mAppWidgetId, R.id.allapps_list);
         }
     }
 }

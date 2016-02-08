@@ -11,7 +11,7 @@ import android.util.Log;
  * Created by yenhsunhuang on 2016/2/2.
  */
 public class BaseWidgetProvider extends AppWidgetProvider {
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
     private static final String TAG = "BaseWidgetProvider";
 
     @Override

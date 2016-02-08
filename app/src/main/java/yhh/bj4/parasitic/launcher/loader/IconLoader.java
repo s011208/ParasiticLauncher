@@ -64,14 +64,26 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-
+                onPackageChanged(intent.getData().toString());
             } else if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
-
+                onPackageChanged(intent.getData().toString());
             } else if (Intent.ACTION_PACKAGE_CHANGED.equals(action)) {
-
+                onPackageChanged(intent.getData().toString());
             }
         }
     };
+
+    private void onPackageChanged(final String loadedPkg) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IconPackHelper.getInstance(mContext).reloadAllIconPackList();
+                if (mActivityInfoCache.get(loadedPkg) == null) return;
+                requestToLoadIconPack(loadedPkg, true);
+                startToLoadIcon(loadedPkg);
+            }
+        }).start();
+    }
 
     public synchronized static IconLoader getInstance(Context context) {
         if (sInstance == null) {
@@ -113,9 +125,9 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
     public void onIconPackLoadFinish() {
         if (DEBUG) {
             Log.d(TAG, "onIconPackLoadFinish");
-        }
-        for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
-            Log.d(TAG, "pack: " + pack.getIconPackPackageName() + ", title: " + pack.getIconPackPackageTitle());
+            for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
+                Log.d(TAG, "pack: " + pack.getIconPackPackageName() + ", title: " + pack.getIconPackPackageTitle());
+            }
         }
     }
 

@@ -22,7 +22,7 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
     public static final String ON_ALL_APPS_ITEM_CLICK_INDEX = "yhh.bj4.parasitic.launcher.widgets.allapps.click.index";
     public static final String EXTRA_COMPONENTNAME = "extra_componentname";
     private static final String TAG = "AllappsWidgetProvider";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -45,7 +45,8 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager
             appWidgetManager, int[] appWidgetIds) {
-        Log.d(TAG, "onUpdate");
+        if (DEBUG)
+            Log.d(TAG, "onUpdate");
         for (int i = 0; i < appWidgetIds.length; ++i) {
             RemoteViews remoteViews = updateWidgetListView(context,
                     appWidgetIds[i]);
@@ -59,11 +60,12 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
         updateWidgetListView(context, appWidgetId);
-        Log.d(TAG, "onAppWidgetOptionsChanged");
+        if (DEBUG)
+            Log.d(TAG, "onAppWidgetOptionsChanged");
     }
 
     public static RemoteViews updateWidgetListView(Context context,
-                                             int appWidgetId) {
+                                                   int appWidgetId) {
         if (DEBUG) {
             Log.d(TAG, "updateWidgetListView with id: " + appWidgetId);
         }
@@ -82,10 +84,5 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
         remoteViews.setRemoteAdapter(R.id.allapps_list,
                 svcIntent);
         return remoteViews;
-    }
-
-    public static void notifyDataSetChanged(Context context, int appWidgetId) {
-        AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        manager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.allapps_list);
     }
 }
