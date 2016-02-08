@@ -70,7 +70,7 @@ public class IconPackHelper {
 
     public void addCallback(Callback cb) {
         if (cb == null) return;
-        mCallbacks.add(new WeakReference<Callback>(cb));
+        mCallbacks.add(new WeakReference<>(cb));
     }
 
     public synchronized static IconPackHelper getInstance(Context context) {

@@ -12,7 +12,6 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -36,7 +35,7 @@
                 android:resource="@xml/allapps_widget_info" />
         </receiver>
         <activity
-            android:name=".widgets.allapps.AllappsWidgetConfiguration"
+            android:name=".widgets.allapps.AllappsWidgetConfigurationActivity"
             android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />

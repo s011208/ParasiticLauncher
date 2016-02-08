@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Parasitic Launcher</string>
+
+    <!-- pref_allapps_widget_configuration -->
+    <string name="icon_settings">Icon settings</string>
+    <string name="icon_pack_title">Icon pack</string>
+    <string name="icon_pack_list">Icon pack list</string>
 </resources>
