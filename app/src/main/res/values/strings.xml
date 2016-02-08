@@ -5,4 +5,13 @@
     <string name="icon_settings">Icon settings</string>
     <string name="icon_pack_title">Icon pack</string>
     <string name="icon_pack_list">Icon pack list</string>
+    <string name="icon_size">Icon size</string>
+    <string name="icon_size_small">Small</string>
+    <string name="icon_size_normal">Normal</string>
+    <string name="icon_size_large">Large</string>
+    <string-array name="icon_size_array">
+        <item>@string/icon_size_small</item>
+        <item>@string/icon_size_normal</item>
+        <item>@string/icon_size_large</item>
+    </string-array>
 </resources>

@@ -1,10 +1,12 @@
 package yhh.bj4.parasitic.launcher.utils.iconpack;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,8 +23,10 @@ import yhh.bj4.parasitic.launcher.R;
  * Created by yenhsunhuang on 2016/2/7.
  */
 public class IconPackListDialog extends DialogFragment {
+    public static final String EXTRA_ICON_PACK_PACKAGE = "extra_icon_pack_package";
+    public static final String EXTRA_ICON_PACK_TITLE = "extra_icon_pack_title";
     public interface Callback {
-        void onIconPackSelected(String iconPackPackageName);
+        void onIconPackSelected(String iconPackPackageName, String iconPackTitle);
     }
 
     private IconPackHelper mIconPackHelper;
@@ -45,8 +49,17 @@ public class IconPackListDialog extends DialogFragment {
         mDialog = new AlertDialog.Builder(getActivity()).setTitle(R.string.icon_pack_list).setAdapter(mAdapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (mCallback == null) return;
-                mCallback.onIconPackSelected(mAdapter.getItem(which).getIconPackPackageName());
+                final String iconPackPackageName = mAdapter.getItem(which).getIconPackPackageName();
+                final String iconPackTitle = mAdapter.getItem(which).getIconPackPackageTitle();
+                if (mCallback != null) {
+                    mCallback.onIconPackSelected(iconPackPackageName, iconPackTitle);
+                }
+                if (getTargetFragment() != null) {
+                    Intent intent = getActivity().getIntent();
+                    intent.putExtra(EXTRA_ICON_PACK_PACKAGE, iconPackPackageName);
+                    intent.putExtra(EXTRA_ICON_PACK_TITLE, iconPackTitle);
+                    getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, intent);
+                }
             }
         }).create();
         return mDialog;

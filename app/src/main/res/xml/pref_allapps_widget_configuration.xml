@@ -4,5 +4,8 @@
         <Preference
             android:key="icon_pack"
             android:title="@string/icon_pack_title"></Preference>
+        <Preference
+            android:key="icon_size"
+            android:title="@string/icon_size"></Preference>
     </PreferenceCategory>
 </PreferenceScreen>
