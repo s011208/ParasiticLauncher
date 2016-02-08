@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import yhh.bj4.parasitic.launcher.R;
+import yhh.bj4.parasitic.launcher.widgets.BaseWidgetPreferenceFragment;
 
 /**
  * Created by yenhsunhuang on 2016/2/7.
@@ -16,7 +17,7 @@ public class AllappsWidgetConfigurationActivity extends Activity {
     private static final String TAG = "AllappsWidgetConfigure";
     private static final boolean DEBUG = true;
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    private AllappsWidgetConfigurePreference mPreference;
+    private BaseWidgetPreferenceFragment mPreference;
 
     private TextView mOK, mCancel;
 
@@ -60,6 +61,7 @@ public class AllappsWidgetConfigurationActivity extends Activity {
     }
 
     private void setAppWidgetResultOk() {
+        mPreference.saveAllPreferenceValue();
         Intent resultValue = new Intent();
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
         setResult(RESULT_OK, resultValue);
