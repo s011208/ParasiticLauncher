@@ -22,7 +22,7 @@
             android:layout_weight="1"
             android:background="@drawable/text_view_background"
             android:gravity="center"
-            android:padding="3dp"
+            android:padding="8dp"
             android:text="@android:string/cancel"
             android:textSize="@dimen/confirm_area_text_size" />
 
@@ -33,7 +33,7 @@
             android:layout_weight="1"
             android:background="@drawable/text_view_background"
             android:gravity="center"
-            android:padding="3dp"
+            android:padding="8dp"
             android:text="@android:string/ok"
             android:textSize="@dimen/confirm_area_text_size" />
     </LinearLayout>
