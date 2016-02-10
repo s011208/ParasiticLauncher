@@ -15,7 +15,7 @@
             android:key="title_text_color"
             android:title="@string/app_title_text_color"></Preference>
     </PreferenceCategory>
-    <PreferenceCategory android:title="string/widget_settings">
+    <PreferenceCategory android:title="@string/widget_settings">
         <Preference
             android:key="widget_background_type"
             android:title="@string/widget_background"></Preference>
