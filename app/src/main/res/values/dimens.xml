@@ -4,7 +4,9 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="default_icon_size">64dp</dimen>
     <dimen name="normal_app_icon_layout_icon_size">@dimen/default_icon_size</dimen>
+    <dimen name="small_app_icon_layout_title_text_size">12sp</dimen>
     <dimen name="normal_app_icon_layout_title_text_size">16sp</dimen>
+    <dimen name="large_app_icon_layout_title_text_size">20sp</dimen>
     <dimen name="icon_pack_dialog_list_adapter_title">16sp</dimen>
     <dimen name="confirm_area_text_size">14sp</dimen>
 </resources>

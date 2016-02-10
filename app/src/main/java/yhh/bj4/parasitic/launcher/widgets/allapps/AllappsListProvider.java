@@ -38,6 +38,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private boolean mShowIcon = true;
     private int mTextSizeIndex = IconSizeListDialog.ICON_SIZE_NORMAL;
     private int mTextSize;
+    private int mAppTitleTextColor = 0;
 
     public AllappsListProvider(Context context, Intent intent) {
         mContext = context;
@@ -52,10 +53,11 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     public void onCreate() {
     }
 
-    private void loadData() {
+    private void loadConfiguration() {
         mApplyIconPackPkg = mPrefs.getString(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_PACK_PKG, IconLoader.ICON_PACK_DEFAULT);
         mShowIcon = mPrefs.getBoolean(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_VISIBILITY, true);
         mTextSizeIndex = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, IconSizeListDialog.ICON_SIZE_NORMAL);
+        mAppTitleTextColor = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_APP_TITLE_TEXT_COLOR, 0);
         switch (mTextSizeIndex) {
             case IconSizeListDialog.ICON_SIZE_SMALL:
                 mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.small_app_icon_layout_title_text_size);
@@ -71,8 +73,12 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         }
         if (DEBUG) {
             Log.i(TAG, "loadData, icon pack: " + mApplyIconPackPkg + ", mShowIcon: " + mShowIcon
-                    + ", mTextSizeIndex: " + mTextSizeIndex);
+                    + ", mTextSizeIndex: " + mTextSizeIndex + ", mAppTitleTextColor: " + mAppTitleTextColor);
         }
+    }
+
+    private void loadData() {
+        loadConfiguration();
         boolean find = false;
         for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
             if (pack.getIconPackPackageName().equals(mApplyIconPackPkg)) {
@@ -122,6 +128,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
 
     @Override
     public RemoteViews getViewAt(int position) {
+        if (listItemList.size() <= position) return null;
         final ActivityInfoCache info = listItemList.get(position);
         RemoteViews iconContainer = new RemoteViews(mContext.getPackageName(), R.layout.normal_app_icon_layout);
         iconContainer.setImageViewBitmap(R.id.icon, info.getBitmap());
@@ -132,6 +139,9 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         intent.putExtra(AllappsWidgetProvider.ON_ALL_APPS_ITEM_CLICK_INDEX, position);
         intent.putExtra(AllappsWidgetProvider.EXTRA_COMPONENTNAME, info.getComponentName().flattenToShortString());
         iconContainer.setOnClickFillInIntent(R.id.normal_app_icon_container, intent);
+        if (mAppTitleTextColor != 0) {
+            iconContainer.setTextColor(R.id.title, mAppTitleTextColor);
+        }
         return iconContainer;
     }
 

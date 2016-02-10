@@ -67,6 +67,7 @@ public class AllappsWidgetConfigurationActivity extends Activity {
         setResult(RESULT_OK, resultValue);
         AppWidgetManager manager = AppWidgetManager.getInstance(this);
         manager.notifyAppWidgetViewDataChanged(mAppWidgetId, R.id.allapps_list);
+        AllappsWidgetProvider.updateAppWidget(manager, this, mAppWidgetId);
     }
 
     @Override
@@ -74,4 +75,5 @@ public class AllappsWidgetConfigurationActivity extends Activity {
         setAppWidgetResultOk();
         super.onBackPressed();
     }
+
 }

@@ -5,13 +5,22 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import java.io.File;
+
 import yhh.bj4.parasitic.launcher.R;
+import yhh.bj4.parasitic.launcher.Utilities;
 import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
+import yhh.bj4.parasitic.launcher.utils.images.BackgroundTypeChooserDialog;
 import yhh.bj4.parasitic.launcher.widgets.BaseWidgetProvider;
 
 /**
@@ -48,10 +57,7 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
         if (DEBUG)
             Log.d(TAG, "onUpdate");
         for (int i = 0; i < appWidgetIds.length; ++i) {
-            RemoteViews remoteViews = updateWidgetListView(context,
-                    appWidgetIds[i]);
-            appWidgetManager.updateAppWidget(appWidgetIds[i],
-                    remoteViews);
+            updateAppWidget(appWidgetManager, context, appWidgetIds[i]);
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds);
     }
@@ -64,11 +70,23 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
             Log.d(TAG, "onAppWidgetOptionsChanged");
     }
 
-    public static RemoteViews updateWidgetListView(Context context,
-                                                   int appWidgetId) {
+    public static void updateAppWidget(AppWidgetManager appWidgetManager, Context context, int widgetId) {
+        RemoteViews remoteViews = updateWidgetListView(context,
+                widgetId);
+        appWidgetManager.updateAppWidget(widgetId, remoteViews);
+    }
+
+    private static RemoteViews updateWidgetListView(Context context,
+                                                    int appWidgetId) {
         if (DEBUG) {
             Log.d(TAG, "updateWidgetListView with id: " + appWidgetId);
         }
+        final SharedPreferences mPrefs = context.getSharedPreferences(AllappsWidgetConfigurePreference.class.getSimpleName() + String.valueOf(appWidgetId), Context.MODE_PRIVATE);
+        final int backgroundType = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_WIDGET_BACKGROUND_TYPE, BackgroundTypeChooserDialog.TYPE_COLOR);
+        int backgroundColor = 0;
+        String backgroundPath = null;
+        int backgroundPathAlpha = 255;
+
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.all_apps_widget);
         Intent svcIntent = new Intent(context, AllappsWidgetService.class);
         svcIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
@@ -83,6 +101,33 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
 
         remoteViews.setRemoteAdapter(R.id.allapps_list,
                 svcIntent);
+
+        if (backgroundType == BackgroundTypeChooserDialog.TYPE_COLOR) {
+            backgroundColor = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_WIDGET_BACKGROUND_COLOR, 0);
+            if (backgroundColor != 0) {
+                remoteViews.setInt(R.id.allapps_background, "setBackgroundColor", backgroundColor);
+                remoteViews.setImageViewBitmap(R.id.allapps_background, null);
+            }
+        } else if (backgroundType == BackgroundTypeChooserDialog.TYPE_IMAGE) {
+            backgroundPath = mPrefs.getString(AllappsWidgetConfigurePreference.SPREF_KEY_WIDGET_BACKGROUND_PATH, null);
+            backgroundPathAlpha = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_WIDGET_BACKGROUND_PATH_ALPHA, 100);
+            Bitmap b = Utilities.decodeFile(new File(backgroundPath));
+            if (b != null) {
+                Bitmap alphaBitmap = Bitmap.createBitmap(b.getWidth(), b.getHeight(), Bitmap.Config.ARGB_8888);
+                if (backgroundPathAlpha != 0) {
+                    Canvas c = new Canvas();
+                    c.setBitmap(alphaBitmap);
+                    Paint alphaPaint = new Paint();
+                    alphaPaint.setAlpha(backgroundPathAlpha);
+                    c.drawBitmap(b, 0, 0, alphaPaint);
+                    c.setBitmap(null);
+                    b.recycle();
+                    b = null;
+                }
+                remoteViews.setImageViewBitmap(R.id.allapps_background, alphaBitmap);
+                remoteViews.setInt(R.id.allapps_background, "setBackgroundColor", Color.TRANSPARENT);
+            }
+        }
         return remoteViews;
     }
 }
