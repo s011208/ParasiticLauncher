@@ -13,7 +13,6 @@ import android.widget.RemoteViewsService;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
@@ -21,6 +20,8 @@ import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
 import yhh.bj4.parasitic.launcher.utils.iconsize.IconSizeListDialog;
+import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromAToZ;
+import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromZToA;
 
 /**
  * Created by yenhsunhuang on 2016/2/6.
@@ -104,12 +105,17 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         } else {
             listItemList.addAll(mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).values());
         }
-        Collections.sort(listItemList, new Comparator<ActivityInfoCache>() {
-            @Override
-            public int compare(ActivityInfoCache lhs, ActivityInfoCache rhs) {
-                return lhs.getTitle().compareTo(rhs.getTitle());
-            }
-        });
+        switch (mSortingRule) {
+            case AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z:
+                Collections.sort(listItemList, new SortFromAToZ());
+                break;
+            case AllappsWidgetConfigurePreference.SORTING_RULE_Z_TO_A:
+                Collections.sort(listItemList, new SortFromZToA());
+                break;
+            default:
+                Collections.sort(listItemList, new SortFromAToZ());
+                break;
+        }
     }
 
     @Override
