@@ -39,6 +39,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private int mTextSizeIndex = IconSizeListDialog.ICON_SIZE_NORMAL;
     private int mTextSize;
     private int mAppTitleTextColor = 0;
+    private int mSortingRule = AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z;
 
     public AllappsListProvider(Context context, Intent intent) {
         mContext = context;
@@ -71,9 +72,11 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
             default:
                 mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_app_icon_layout_title_text_size);
         }
+        mSortingRule = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_SORTING_RULE, AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z);
         if (DEBUG) {
             Log.i(TAG, "loadData, icon pack: " + mApplyIconPackPkg + ", mShowIcon: " + mShowIcon
-                    + ", mTextSizeIndex: " + mTextSizeIndex + ", mAppTitleTextColor: " + mAppTitleTextColor);
+                    + ", mTextSizeIndex: " + mTextSizeIndex + ", mAppTitleTextColor: " + mAppTitleTextColor
+                    + ", mSortingRule: " + mSortingRule);
         }
     }
 

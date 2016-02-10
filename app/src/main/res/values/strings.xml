@@ -30,4 +30,16 @@
         <item>@string/widget_background_type_image</item>
     </string-array>
     <string name="widget_background_image_alpha_dialog_title">Set background alpha</string>
+    <string name="other_settings_title">Other settings</string>
+    <string name="sorting_rule">Sorting rule</string>
+    <string name="sorting_rule_a_to_z">A to Z</string>
+    <string name="sorting_rule_z_to_a">Z to A</string>
+    <string name="sorting_rule_recently">Recently use</string>
+    <string name="sorting_rule_mostly">Mostly use</string>
+    <string-array name="sorting_rule_list">
+        <item>@string/sorting_rule_a_to_z</item>
+        <item>@string/sorting_rule_z_to_a</item>
+        <item>@string/sorting_rule_recently</item>
+        <item>@string/sorting_rule_mostly</item>
+    </string-array>
 </resources>

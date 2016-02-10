@@ -20,4 +20,9 @@
             android:key="widget_background_type"
             android:title="@string/widget_background"></Preference>
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/other_settings_title">
+        <Preference
+            android:key="sorting_rule"
+            android:title="@string/sorting_rule"></Preference>
+    </PreferenceCategory>
 </PreferenceScreen>

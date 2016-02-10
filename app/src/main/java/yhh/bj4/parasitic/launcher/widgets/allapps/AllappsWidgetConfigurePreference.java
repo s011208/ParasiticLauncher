@@ -15,6 +15,7 @@ import android.util.Log;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackListDialog;
 import yhh.bj4.parasitic.launcher.utils.iconsize.IconSizeListDialog;
+import yhh.bj4.parasitic.launcher.utils.iconsorting.IconSortingDialog;
 import yhh.bj4.parasitic.launcher.utils.images.BackgroundTypeChooserDialog;
 import yhh.bj4.parasitic.launcher.utils.images.ColorChooserDialog;
 import yhh.bj4.parasitic.launcher.utils.images.ImageAlphaDialog;
@@ -29,6 +30,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     private static final String KEY_APP_TITLE_VISIBILITY = "app_title_visibility";
     private static final String KEY_APP_TITLE_TEXT_COLOR = "title_text_color";
     private static final String KEY_WIDGET_BACKGROUND_TYPE = "widget_background_type";
+    private static final String KEY_SORTING_RULE = "sorting_rule";
 
     private static final int REQUEST_ICON_PACK = 1;
     private static final int REQUEST_ICON_SIZE = 2;
@@ -36,6 +38,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     private static final int REQUEST_WIDGET_BACKGROUND_TYPE = 4;
     private static final int REQUEST_WIDGET_BACKGROUND_IMAGE_DATA = 5;
     private static final int REQUEST_WIDGET_BACKGROUND_IMAGE_ALPHA = 6;
+    private static final int REQUEST_ICON_SORTING_RULE = 7;
 
     public static final String SPREF_KEY_ICON_SIZE = "icon_size";
     public static final String SPREF_KEY_ICON_PACK_PKG = "icon_pack_pkg";
@@ -46,6 +49,12 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     public static final String SPREF_KEY_WIDGET_BACKGROUND_COLOR = "widget_background_color";
     public static final String SPREF_KEY_WIDGET_BACKGROUND_PATH = "widget_background_path";
     public static final String SPREF_KEY_WIDGET_BACKGROUND_PATH_ALPHA = "widget_background_path_alpha";
+    public static final String SPREF_KEY_SORTING_RULE = "widget_sorting_rule";
+
+    public static final int SORTING_RULE_A_TO_Z = 0;
+    public static final int SORTING_RULE_Z_TO_A = 1;
+    public static final int SORTING_RULE_RECENTLY = 2;
+    public static final int SORTING_RULE_MOSTLY = 3;
 
     private int mIconSize = IconSizeListDialog.ICON_SIZE_NORMAL;
     private String mIconPackPackageName;
@@ -56,6 +65,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     private int mWidgetBackgroundPathAlpha = 255;
     private boolean mIconVisibility;
     private int mAppTitleTextColor = 0;
+    private int mSortingRule = SORTING_RULE_A_TO_Z;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,7 +74,29 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         setIconPackSummary();
         setIconSizeSummary();
         setWidgetBackgroundTypeSummary();
+        setSortingRuleSummary();
         initIconVisibilityPreference();
+    }
+
+    private void setSortingRuleSummary() {
+        Preference pref = findPreference(KEY_SORTING_RULE);
+        int stringRes = R.string.sorting_rule_a_to_z;
+        if (pref == null) return;
+        switch (mSortingRule) {
+            case SORTING_RULE_A_TO_Z:
+                stringRes = R.string.sorting_rule_a_to_z;
+                break;
+            case SORTING_RULE_Z_TO_A:
+                stringRes = R.string.sorting_rule_z_to_a;
+                break;
+            case SORTING_RULE_RECENTLY:
+                stringRes = R.string.sorting_rule_recently;
+                break;
+            case SORTING_RULE_MOSTLY:
+                stringRes = R.string.sorting_rule_mostly;
+                break;
+        }
+        pref.setSummary(stringRes);
     }
 
     private void setWidgetBackgroundTypeSummary() {
@@ -115,6 +147,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         mWidgetBackgroundColor = (Integer) getPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_COLOR, 0);
         mWidgetBackgroundPath = (String) getPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_PATH, null);
         mWidgetBackgroundPathAlpha = (Integer) getPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_PATH_ALPHA, 255);
+        mSortingRule = (Integer) getPreferenceValue(SPREF_KEY_SORTING_RULE, SORTING_RULE_A_TO_Z);
     }
 
     @Override
@@ -143,6 +176,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
             argus.putInt(ColorChooserDialog.COLOR_BLUE, mAppTitleTextColor == 0 ? 0 : Color.blue(mAppTitleTextColor));
             dialog.setArguments(argus);
             dialog.show(getFragmentManager(), ColorChooserDialog.class.getName());
+            return true;
         } else if (KEY_WIDGET_BACKGROUND_TYPE.equals(key)) {
             BackgroundTypeChooserDialog dialog = new BackgroundTypeChooserDialog();
             dialog.setTargetFragment(this, REQUEST_WIDGET_BACKGROUND_TYPE);
@@ -153,6 +187,15 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
             argus.putInt(ColorChooserDialog.COLOR_BLUE, mWidgetBackgroundColor == 0 ? 0 : Color.blue(mWidgetBackgroundColor));
             dialog.setArguments(argus);
             dialog.show(getFragmentManager(), BackgroundTypeChooserDialog.class.getName());
+            return true;
+        } else if (KEY_SORTING_RULE.equals(key)) {
+            IconSortingDialog dialog = new IconSortingDialog();
+            dialog.setTargetFragment(this, REQUEST_ICON_SORTING_RULE);
+            Bundle argus = new Bundle();
+            argus.putInt(IconSortingDialog.SORTING_RULE, mSortingRule);
+            dialog.setArguments(argus);
+            dialog.show(getFragmentManager(), IconSortingDialog.class.getName());
+            return true;
         }
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
@@ -239,6 +282,13 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
                     Log.d(TAG, "mWidgetBackgroundPathAlpha: " + mWidgetBackgroundPathAlpha);
                 }
                 putPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_PATH_ALPHA, mWidgetBackgroundPathAlpha);
+            } else if (requestCode == REQUEST_ICON_SORTING_RULE) {
+                mSortingRule = data.getIntExtra(IconSortingDialog.SORTING_RULE, SORTING_RULE_A_TO_Z);
+                if (DEBUG) {
+                    Log.d(TAG, "mSortingRule: " + mSortingRule);
+                }
+                setSortingRuleSummary();
+                putPreferenceValue(SPREF_KEY_SORTING_RULE, mSortingRule);
             }
         } else {
             if (requestCode == REQUEST_WIDGET_BACKGROUND_IMAGE_DATA) {
