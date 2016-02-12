@@ -15,12 +15,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import yhh.bj4.parasitic.launcher.R;
-import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
-import yhh.bj4.parasitic.launcher.utils.iconsize.IconSizeListDialog;
+import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromAToZ;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromZToA;
 
@@ -38,7 +37,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private String mApplyIconPackPkg;
     private final IconLoader mIconLoader;
     private boolean mShowIcon = true;
-    private int mTextSizeIndex = IconSizeListDialog.ICON_SIZE_NORMAL;
+    private int mTextSizeIndex = SizeListDialog.SIZE_NORMAL;
     private int mTextSize;
     private int mAppTitleTextColor = 0;
     private int mSortingRule = AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z;
@@ -59,16 +58,16 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private void loadConfiguration() {
         mApplyIconPackPkg = mPrefs.getString(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_PACK_PKG, IconLoader.ICON_PACK_DEFAULT);
         mShowIcon = mPrefs.getBoolean(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_VISIBILITY, true);
-        mTextSizeIndex = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, IconSizeListDialog.ICON_SIZE_NORMAL);
+        mTextSizeIndex = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, SizeListDialog.SIZE_NORMAL);
         mAppTitleTextColor = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_APP_TITLE_TEXT_COLOR, 0);
         switch (mTextSizeIndex) {
-            case IconSizeListDialog.ICON_SIZE_SMALL:
+            case SizeListDialog.SIZE_SMALL:
                 mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.small_app_icon_layout_title_text_size);
                 break;
-            case IconSizeListDialog.ICON_SIZE_NORMAL:
+            case SizeListDialog.SIZE_NORMAL:
                 mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_app_icon_layout_title_text_size);
                 break;
-            case IconSizeListDialog.ICON_SIZE_LARGE:
+            case SizeListDialog.SIZE_LARGE:
                 mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.large_app_icon_layout_title_text_size);
                 break;
             default:

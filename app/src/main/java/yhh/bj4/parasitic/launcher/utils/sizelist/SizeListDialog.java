@@ -1,4 +1,4 @@
-package yhh.bj4.parasitic.launcher.utils.iconsize;
+package yhh.bj4.parasitic.launcher.utils.sizelist;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -13,11 +13,11 @@ import yhh.bj4.parasitic.launcher.R;
 /**
  * Created by yenhsunhuang on 2016/2/8.
  */
-public class IconSizeListDialog extends DialogFragment {
-    public static final String EXTRA_ICON_SIZE = "extra_icon_size";
-    public static final int ICON_SIZE_SMALL = 0;
-    public static final int ICON_SIZE_NORMAL = 1;
-    public static final int ICON_SIZE_LARGE = 2;
+public class SizeListDialog extends DialogFragment {
+    public static final String EXTRA_SIZE = "extra_size";
+    public static final int SIZE_SMALL = 0;
+    public static final int SIZE_NORMAL = 1;
+    public static final int SIZE_LARGE = 2;
 
     public interface Callback {
         void onIconSizeSelected(int iconSize);
@@ -38,16 +38,16 @@ public class IconSizeListDialog extends DialogFragment {
         return new AlertDialog.Builder(getActivity()).setTitle(R.string.icon_size).setItems(R.array.icon_size_array, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                int iconSize = ICON_SIZE_NORMAL;
+                int iconSize = SIZE_NORMAL;
                 switch (which) {
                     case 0:
-                        iconSize = ICON_SIZE_SMALL;
+                        iconSize = SIZE_SMALL;
                         break;
                     case 1:
-                        iconSize = ICON_SIZE_NORMAL;
+                        iconSize = SIZE_NORMAL;
                         break;
                     case 2:
-                        iconSize = ICON_SIZE_LARGE;
+                        iconSize = SIZE_LARGE;
                         break;
                 }
                 if (mCallback != null) {
@@ -55,10 +55,11 @@ public class IconSizeListDialog extends DialogFragment {
                 }
                 if (getTargetFragment() != null) {
                     Intent intent = getActivity().getIntent();
-                    intent.putExtra(EXTRA_ICON_SIZE, iconSize);
+                    intent.putExtra(EXTRA_SIZE, iconSize);
                     getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, intent);
                 }
             }
         }).create();
     }
+
 }

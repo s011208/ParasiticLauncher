@@ -14,7 +14,7 @@ import android.util.Log;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackListDialog;
-import yhh.bj4.parasitic.launcher.utils.iconsize.IconSizeListDialog;
+import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.IconSortingDialog;
 import yhh.bj4.parasitic.launcher.utils.images.BackgroundTypeChooserDialog;
 import yhh.bj4.parasitic.launcher.utils.images.ColorChooserDialog;
@@ -56,7 +56,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     public static final int SORTING_RULE_RECENTLY = 2;
     public static final int SORTING_RULE_MOSTLY = 3;
 
-    private int mIconSize = IconSizeListDialog.ICON_SIZE_NORMAL;
+    private int mIconSize = SizeListDialog.SIZE_NORMAL;
     private String mIconPackPackageName;
     private String mIconPackTitle;
     private int mWidgetBackgroundType = BackgroundTypeChooserDialog.TYPE_COLOR;
@@ -117,13 +117,13 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         if (pref == null) return;
         int summaryRes = R.string.icon_size_normal;
         switch (mIconSize) {
-            case IconSizeListDialog.ICON_SIZE_SMALL:
+            case SizeListDialog.SIZE_SMALL:
                 summaryRes = R.string.icon_size_small;
                 break;
-            case IconSizeListDialog.ICON_SIZE_NORMAL:
+            case SizeListDialog.SIZE_NORMAL:
                 summaryRes = R.string.icon_size_normal;
                 break;
-            case IconSizeListDialog.ICON_SIZE_LARGE:
+            case SizeListDialog.SIZE_LARGE:
                 summaryRes = R.string.icon_size_large;
                 break;
         }
@@ -141,7 +141,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     public void initSharedPreferenceValues() {
         mIconPackPackageName = (String) getPreferenceValue(SPREF_KEY_ICON_PACK_PKG, null);
         mIconPackTitle = (String) getPreferenceValue(SPREF_KEY_ICON_PACK_TITLE, null);
-        mIconSize = (Integer) getPreferenceValue(SPREF_KEY_ICON_SIZE, IconSizeListDialog.ICON_SIZE_NORMAL);
+        mIconSize = (Integer) getPreferenceValue(SPREF_KEY_ICON_SIZE, SizeListDialog.SIZE_NORMAL);
         mAppTitleTextColor = (Integer) getPreferenceValue(SPREF_KEY_APP_TITLE_TEXT_COLOR, 0);
         mWidgetBackgroundType = (Integer) getPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_TYPE, BackgroundTypeChooserDialog.TYPE_COLOR);
         mWidgetBackgroundColor = (Integer) getPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_COLOR, 0);
@@ -162,9 +162,9 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
             dialog.show(getFragmentManager(), IconPackListDialog.class.getName());
             return true;
         } else if (KEY_ICON_SIZE.equals(key)) {
-            IconSizeListDialog dialog = new IconSizeListDialog();
+            SizeListDialog dialog = new SizeListDialog();
             dialog.setTargetFragment(this, REQUEST_ICON_SIZE);
-            dialog.show(getFragmentManager(), IconSizeListDialog.class.getName());
+            dialog.show(getFragmentManager(), SizeListDialog.class.getName());
             return true;
         } else if (KEY_APP_TITLE_TEXT_COLOR.equals(key)) {
             ColorChooserDialog dialog = new ColorChooserDialog();
@@ -215,7 +215,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
                 putPreferenceValue(SPREF_KEY_ICON_PACK_PKG, mIconPackPackageName);
                 putPreferenceValue(SPREF_KEY_ICON_PACK_TITLE, mIconPackTitle);
             } else if (requestCode == REQUEST_ICON_SIZE) {
-                mIconSize = data.getIntExtra(IconSizeListDialog.EXTRA_ICON_SIZE, IconSizeListDialog.ICON_SIZE_NORMAL);
+                mIconSize = data.getIntExtra(SizeListDialog.EXTRA_SIZE, SizeListDialog.SIZE_NORMAL);
                 if (DEBUG) {
                     Log.d(TAG, "icon size: " + mIconSize);
                 }
