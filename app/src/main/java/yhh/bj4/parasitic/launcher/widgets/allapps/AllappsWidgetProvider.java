@@ -20,6 +20,7 @@ import java.io.File;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.Utilities;
 import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
+import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.images.BackgroundTypeChooserDialog;
 import yhh.bj4.parasitic.launcher.widgets.BaseWidgetProvider;
 
@@ -47,7 +48,7 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
             if (DEBUG) {
                 Log.d(TAG, "click index: " + viewIndex + ", cn: " + cn.flattenToShortString());
             }
-            context.startActivity(ActivityInfoCache.getStartIntent(cn));
+            context.startActivity(InfoCache.getStartIntent(cn));
         }
     }
 

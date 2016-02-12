@@ -10,8 +10,8 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:supportsRtl="true"
         android:largeHeap="true"
+        android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -49,6 +49,9 @@
             android:name="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
         <!-- all apps widget components end-->
+        <provider
+            android:name="yhh.bj4.parasitic.launcher.LauncherProvider"
+            android:authorities="yhh.bj4.parasitic.launcher.LauncherProvider"></provider>
     </application>
 
 </manifest>

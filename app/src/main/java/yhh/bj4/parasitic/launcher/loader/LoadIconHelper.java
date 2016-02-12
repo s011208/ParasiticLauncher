@@ -25,13 +25,13 @@ public class LoadIconHelper implements Runnable, LoadSingleIconTask.Callback, Ic
     private final WeakReference<Callback> mCallback;
     private final WeakReference<Context> mContext;
     private final WeakReference<IconLoader> mIconLoader;
-    private final HashMap<ComponentName, ActivityInfoCache> mActivityInfoCache;
+    private final HashMap<ComponentName, InfoCache> mActivityInfoCache;
     private AtomicInteger mRemainTasks = new AtomicInteger(0);
     private final String mIconPackageName;
     private final IconPackHelper mIconPackHelper;
     private boolean mWaitingForIconPackLoading = false;
 
-    public LoadIconHelper(Context context, String iconPackageName, HashMap<ComponentName, ActivityInfoCache> activityInfoCache
+    public LoadIconHelper(Context context, String iconPackageName, HashMap<ComponentName, InfoCache> activityInfoCache
             , Callback cb, IconLoader loader) {
         mContext = new WeakReference<>(context);
         mActivityInfoCache = activityInfoCache;
@@ -124,7 +124,7 @@ public class LoadIconHelper implements Runnable, LoadSingleIconTask.Callback, Ic
     }
 
     @Override
-    public void onIconFinishLoading(ComponentName cn, ActivityInfoCache icon) {
+    public void onIconFinishLoading(ComponentName cn, InfoCache icon) {
         int current = mRemainTasks.decrementAndGet();
         if (DEBUG) {
             Log.d(TAG, "mRemainTasks: " + current);

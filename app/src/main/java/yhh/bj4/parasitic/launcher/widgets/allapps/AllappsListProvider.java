@@ -17,6 +17,7 @@ import java.util.Collections;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
+import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
 import yhh.bj4.parasitic.launcher.utils.iconsize.IconSizeListDialog;
@@ -29,7 +30,7 @@ import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromZToA;
 public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactory, IconLoader.Callback {
     private static final String TAG = "AllappsListProvider";
     private static final boolean DEBUG = true;
-    private ArrayList<ActivityInfoCache> listItemList = new ArrayList<>();
+    private ArrayList<InfoCache> listItemList = new ArrayList<>();
     private SparseArray<RemoteViews> mAllappsContainerArray = new SparseArray<>();
     private Context mContext;
     private final int mAppWidgetId;
@@ -138,7 +139,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     @Override
     public RemoteViews getViewAt(int position) {
         if (listItemList.size() <= position) return null;
-        final ActivityInfoCache info = listItemList.get(position);
+        final InfoCache info = listItemList.get(position);
         RemoteViews iconContainer = new RemoteViews(mContext.getPackageName(), R.layout.normal_app_icon_layout);
         iconContainer.setImageViewBitmap(R.id.icon, info.getBitmap());
         iconContainer.setTextViewText(R.id.title, info.getTitle());

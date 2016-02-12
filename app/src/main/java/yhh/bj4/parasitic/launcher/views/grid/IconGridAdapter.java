@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
+import yhh.bj4.parasitic.launcher.loader.InfoCache;
 
 /**
  * Created by yenhsunhuang on 2016/2/6.
@@ -24,7 +25,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     private static final String TAG = "IconGridAdapter";
     private final WeakReference<Context> mContext;
     private final WeakReference<LayoutInflater> mInflater;
-    private final ArrayList<ActivityInfoCache> mItems = new ArrayList<ActivityInfoCache>();
+    private final ArrayList<InfoCache> mItems = new ArrayList<>();
     private final WeakReference<IconLoader> mLoader;
 
     public IconGridAdapter(Context context) {
@@ -42,7 +43,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     }
 
     @Override
-    public ActivityInfoCache getItem(int position) {
+    public InfoCache getItem(int position) {
         return mItems.get(position);
     }
 
@@ -65,7 +66,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-        final ActivityInfoCache activityCache = mItems.get(position);
+        final InfoCache activityCache = mItems.get(position);
         holder.icon.setImageBitmap(activityCache.getBitmap());
         holder.title.setText(activityCache.getTitle());
         return convertView;

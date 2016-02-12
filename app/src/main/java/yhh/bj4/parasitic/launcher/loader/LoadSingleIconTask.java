@@ -22,7 +22,7 @@ public class LoadSingleIconTask implements Runnable {
     private final String mIconPackPackageName;
 
     public interface Callback {
-        void onIconFinishLoading(ComponentName cn, ActivityInfoCache icon);
+        void onIconFinishLoading(ComponentName cn, InfoCache icon);
     }
 
     public LoadSingleIconTask(Context context, PackageManager pm, ResolveInfo appInfo, Callback cb
@@ -37,7 +37,7 @@ public class LoadSingleIconTask implements Runnable {
 
     @Override
     public void run() {
-        ActivityInfoCache icon = null;
+        InfoCache icon = null;
         ComponentName cn = null;
         try {
             final PackageManager pm = mPm.get();

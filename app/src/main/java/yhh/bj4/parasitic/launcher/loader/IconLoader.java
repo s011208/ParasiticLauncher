@@ -52,7 +52,7 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
 
     private final Context mContext;
 
-    private final HashMap<String, HashMap<ComponentName, ActivityInfoCache>> mActivityInfoCache = new HashMap<>();
+    private final HashMap<String, HashMap<ComponentName, InfoCache>> mActivityInfoCache = new HashMap<>();
 
     private static int sDefaultIconSize;
     private final ArrayList<WeakReference<Callback>> mCallbacks = new ArrayList<>();
@@ -205,17 +205,17 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
         if (mLoadIconHelper != null) {
             sWorker.removeCallbacks(mLoadIconHelper);
         }
-        HashMap<ComponentName, ActivityInfoCache> map = new HashMap<>();
+        HashMap<ComponentName, InfoCache> map = new HashMap<>();
         mActivityInfoCache.put(iconPackPkg, map);
         mLoadIconHelper = new LoadIconHelper(mContext, iconPackPkg, map, IconLoader.this, IconLoader.this);
         sWorker.post(mLoadIconHelper);
     }
 
-    public ActivityInfoCache getActivityInfo(String iconPackPkg, ComponentName cn, int iconType) {
+    public InfoCache getActivityInfo(String iconPackPkg, ComponentName cn, int iconType) {
         return mActivityInfoCache.get(iconPackPkg).get(cn);
     }
 
-    public HashMap<ComponentName, ActivityInfoCache> getAllActivitiesInfoCache(String iconPackPkg) {
+    public HashMap<ComponentName, InfoCache> getAllActivitiesInfoCache(String iconPackPkg) {
         if (mActivityInfoCache.get(iconPackPkg) == null) return null;
         return new HashMap<>(mActivityInfoCache.get(iconPackPkg));
     }
