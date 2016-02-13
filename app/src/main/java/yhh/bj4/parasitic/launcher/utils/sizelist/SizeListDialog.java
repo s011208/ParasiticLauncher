@@ -35,27 +35,27 @@ public class SizeListDialog extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new AlertDialog.Builder(getActivity()).setTitle(R.string.icon_size).setItems(R.array.icon_size_array, new DialogInterface.OnClickListener() {
+        return new AlertDialog.Builder(getActivity()).setTitle(R.string.size_list_dialog_title).setItems(R.array.icon_size_array, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                int iconSize = SIZE_NORMAL;
+                int size = SIZE_NORMAL;
                 switch (which) {
                     case 0:
-                        iconSize = SIZE_SMALL;
+                        size = SIZE_SMALL;
                         break;
                     case 1:
-                        iconSize = SIZE_NORMAL;
+                        size = SIZE_NORMAL;
                         break;
                     case 2:
-                        iconSize = SIZE_LARGE;
+                        size = SIZE_LARGE;
                         break;
                 }
                 if (mCallback != null) {
-                    mCallback.onIconSizeSelected(iconSize);
+                    mCallback.onIconSizeSelected(size);
                 }
                 if (getTargetFragment() != null) {
                     Intent intent = getActivity().getIntent();
-                    intent.putExtra(EXTRA_SIZE, iconSize);
+                    intent.putExtra(EXTRA_SIZE, size);
                     getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, intent);
                 }
             }

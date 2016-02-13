@@ -17,7 +17,7 @@
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
         android:layout_margin="2dp"
-        android:columnWidth="@dimen/normal_app_icon_layout_icon_size"
+        android:columnWidth="@dimen/normal_icon_size"
         android:gravity="center"
         android:horizontalSpacing="10dp"
         android:numColumns="auto_fit"

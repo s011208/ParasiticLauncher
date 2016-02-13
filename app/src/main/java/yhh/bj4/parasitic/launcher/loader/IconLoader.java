@@ -167,7 +167,7 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
     }
 
     private void initParams() {
-        sDefaultIconSize = mContext.getResources().getDimensionPixelSize(R.dimen.default_icon_size);
+        sDefaultIconSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_icon_size);
     }
 
     private IconLoader(Context context) {

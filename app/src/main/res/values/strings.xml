@@ -5,6 +5,7 @@
     <string name="icon_settings">Icon settings</string>
     <string name="icon_pack_title">Icon pack</string>
     <string name="icon_pack_list">Icon pack list</string>
+    <string name="size_list_dialog_title">Choose size</string>
     <string name="icon_size">Icon size</string>
     <string name="icon_size_small">Small</string>
     <string name="icon_size_normal">Normal</string>
@@ -14,6 +15,7 @@
         <item>@string/icon_size_normal</item>
         <item>@string/icon_size_large</item>
     </string-array>
+    <string name="app_title_text_size">App title size</string>
     <string name="app_title_visibility">Show app title</string>
     <string name="app_title_text_color">App title text color</string>
     <string name="color_red">Red</string>

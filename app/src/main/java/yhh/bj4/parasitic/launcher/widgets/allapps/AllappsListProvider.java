@@ -19,9 +19,9 @@ import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
-import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromAToZ;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromZToA;
+import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 
 /**
  * Created by yenhsunhuang on 2016/2/6.
@@ -38,7 +38,8 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private final IconLoader mIconLoader;
     private boolean mShowIcon = true;
     private int mTextSizeIndex = SizeListDialog.SIZE_NORMAL;
-    private int mTextSize;
+    private int mAppLayoutResource;
+    private int mTextSize, mIconSize;
     private int mAppTitleTextColor = 0;
     private int mSortingRule = AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z;
 
@@ -58,7 +59,8 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private void loadConfiguration() {
         mApplyIconPackPkg = mPrefs.getString(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_PACK_PKG, IconLoader.ICON_PACK_DEFAULT);
         mShowIcon = mPrefs.getBoolean(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_VISIBILITY, true);
-        mTextSizeIndex = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, SizeListDialog.SIZE_NORMAL);
+        mIconSize = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, SizeListDialog.SIZE_NORMAL);
+        mTextSizeIndex = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_APP_TITLE_TEXT_SIZE, SizeListDialog.SIZE_NORMAL);
         mAppTitleTextColor = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_APP_TITLE_TEXT_COLOR, 0);
         switch (mTextSizeIndex) {
             case SizeListDialog.SIZE_SMALL:
@@ -72,6 +74,19 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
                 break;
             default:
                 mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_app_icon_layout_title_text_size);
+        }
+        switch (mIconSize) {
+            case SizeListDialog.SIZE_SMALL:
+                mAppLayoutResource = R.layout.small_app_icon_layout;
+                break;
+            case SizeListDialog.SIZE_NORMAL:
+                mAppLayoutResource = R.layout.normal_app_icon_layout;
+                break;
+            case SizeListDialog.SIZE_LARGE:
+                mAppLayoutResource = R.layout.large_app_icon_layout;
+                break;
+            default:
+                mAppLayoutResource = R.layout.normal_app_icon_layout;
         }
         mSortingRule = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_SORTING_RULE, AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z);
         if (DEBUG) {
@@ -139,7 +154,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     public RemoteViews getViewAt(int position) {
         if (listItemList.size() <= position) return null;
         final InfoCache info = listItemList.get(position);
-        RemoteViews iconContainer = new RemoteViews(mContext.getPackageName(), R.layout.normal_app_icon_layout);
+        RemoteViews iconContainer = new RemoteViews(mContext.getPackageName(), mAppLayoutResource);
         iconContainer.setImageViewBitmap(R.id.icon, info.getBitmap());
         iconContainer.setTextViewText(R.id.title, info.getTitle());
         iconContainer.setViewVisibility(R.id.title, mShowIcon ? View.VISIBLE : View.GONE);
@@ -161,7 +176,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
 
     @Override
     public int getViewTypeCount() {
-        return 1;
+        return 3;
     }
 
     @Override

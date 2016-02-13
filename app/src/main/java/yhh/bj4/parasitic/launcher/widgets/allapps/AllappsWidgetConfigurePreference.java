@@ -31,6 +31,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     private static final String KEY_APP_TITLE_TEXT_COLOR = "title_text_color";
     private static final String KEY_WIDGET_BACKGROUND_TYPE = "widget_background_type";
     private static final String KEY_SORTING_RULE = "sorting_rule";
+    private static final String KEY_APP_TITLE_TEXT_SIZE = "title_text_size";
 
     private static final int REQUEST_ICON_PACK = 1;
     private static final int REQUEST_ICON_SIZE = 2;
@@ -39,8 +40,10 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     private static final int REQUEST_WIDGET_BACKGROUND_IMAGE_DATA = 5;
     private static final int REQUEST_WIDGET_BACKGROUND_IMAGE_ALPHA = 6;
     private static final int REQUEST_ICON_SORTING_RULE = 7;
+    private static final int REQUEST_APP_TITLE_TEXT_SIZE = 8;
 
     public static final String SPREF_KEY_ICON_SIZE = "icon_size";
+    public static final String SPREF_KEY_APP_TITLE_TEXT_SIZE = "app_title_text_size";
     public static final String SPREF_KEY_ICON_PACK_PKG = "icon_pack_pkg";
     public static final String SPREF_KEY_ICON_PACK_TITLE = "icon_pack_title";
     public static final String SPREF_KEY_ICON_VISIBILITY = KEY_APP_TITLE_VISIBILITY;
@@ -66,6 +69,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
     private boolean mIconVisibility;
     private int mAppTitleTextColor = 0;
     private int mSortingRule = SORTING_RULE_A_TO_Z;
+    private int mAppTitleSize = SizeListDialog.SIZE_NORMAL;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -76,6 +80,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         setWidgetBackgroundTypeSummary();
         setSortingRuleSummary();
         initIconVisibilityPreference();
+        setAppTitleSizeSummary();
     }
 
     private void setSortingRuleSummary() {
@@ -130,6 +135,24 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         pref.setSummary(summaryRes);
     }
 
+    private void setAppTitleSizeSummary() {
+        Preference pref = findPreference(KEY_APP_TITLE_TEXT_SIZE);
+        if (pref == null) return;
+        int summaryRes = R.string.icon_size_normal;
+        switch (mAppTitleSize) {
+            case SizeListDialog.SIZE_SMALL:
+                summaryRes = R.string.icon_size_small;
+                break;
+            case SizeListDialog.SIZE_NORMAL:
+                summaryRes = R.string.icon_size_normal;
+                break;
+            case SizeListDialog.SIZE_LARGE:
+                summaryRes = R.string.icon_size_large;
+                break;
+        }
+        pref.setSummary(summaryRes);
+    }
+
     private void initIconVisibilityPreference() {
         CheckBoxPreference pref = (CheckBoxPreference) findPreference(KEY_APP_TITLE_VISIBILITY);
         if (pref == null) return;
@@ -142,6 +165,7 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         mIconPackPackageName = (String) getPreferenceValue(SPREF_KEY_ICON_PACK_PKG, null);
         mIconPackTitle = (String) getPreferenceValue(SPREF_KEY_ICON_PACK_TITLE, null);
         mIconSize = (Integer) getPreferenceValue(SPREF_KEY_ICON_SIZE, SizeListDialog.SIZE_NORMAL);
+        mAppTitleSize = (Integer) getPreferenceValue(SPREF_KEY_APP_TITLE_TEXT_SIZE, SizeListDialog.SIZE_NORMAL);
         mAppTitleTextColor = (Integer) getPreferenceValue(SPREF_KEY_APP_TITLE_TEXT_COLOR, 0);
         mWidgetBackgroundType = (Integer) getPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_TYPE, BackgroundTypeChooserDialog.TYPE_COLOR);
         mWidgetBackgroundColor = (Integer) getPreferenceValue(SPREF_KEY_WIDGET_BACKGROUND_COLOR, 0);
@@ -164,6 +188,11 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
         } else if (KEY_ICON_SIZE.equals(key)) {
             SizeListDialog dialog = new SizeListDialog();
             dialog.setTargetFragment(this, REQUEST_ICON_SIZE);
+            dialog.show(getFragmentManager(), SizeListDialog.class.getName());
+            return true;
+        } else if (KEY_APP_TITLE_TEXT_SIZE.equals(key)) {
+            SizeListDialog dialog = new SizeListDialog();
+            dialog.setTargetFragment(this, REQUEST_APP_TITLE_TEXT_SIZE);
             dialog.show(getFragmentManager(), SizeListDialog.class.getName());
             return true;
         } else if (KEY_APP_TITLE_TEXT_COLOR.equals(key)) {
@@ -221,6 +250,13 @@ public class AllappsWidgetConfigurePreference extends BaseWidgetPreferenceFragme
                 }
                 setIconSizeSummary();
                 putPreferenceValue(SPREF_KEY_ICON_SIZE, mIconSize);
+            } else if (requestCode == REQUEST_APP_TITLE_TEXT_SIZE) {
+                mAppTitleSize = data.getIntExtra(SizeListDialog.EXTRA_SIZE, SizeListDialog.SIZE_NORMAL);
+                if (DEBUG) {
+                    Log.d(TAG, "app title size: " + mAppTitleSize);
+                }
+                setAppTitleSizeSummary();
+                putPreferenceValue(SPREF_KEY_APP_TITLE_TEXT_SIZE, mAppTitleSize);
             } else if (requestCode == REQUEST_APP_TITLE_TEXT_COLOR) {
                 mAppTitleTextColor = Color.argb(
                         data.getIntExtra(ColorChooserDialog.COLOR_ALPHA, 255),

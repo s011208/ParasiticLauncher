@@ -19,9 +19,9 @@ import java.io.File;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.Utilities;
-import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.images.BackgroundTypeChooserDialog;
+import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 import yhh.bj4.parasitic.launcher.widgets.BaseWidgetProvider;
 
 /**
@@ -87,8 +87,23 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
         int backgroundColor = 0;
         String backgroundPath = null;
         int backgroundPathAlpha = 255;
+        int gridViewLayoutRes = 0;
+        gridViewLayoutRes = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, SizeListDialog.SIZE_NORMAL);
+        switch (gridViewLayoutRes) {
+            case SizeListDialog.SIZE_SMALL:
+                gridViewLayoutRes = R.layout.small_size_all_apps_widget;
+                break;
+            case SizeListDialog.SIZE_NORMAL:
+                gridViewLayoutRes = R.layout.normal_size_all_apps_widget;
+                break;
+            case SizeListDialog.SIZE_LARGE:
+                gridViewLayoutRes = R.layout.large_size_all_apps_widget;
+                break;
+            default:
+                gridViewLayoutRes = R.layout.normal_size_all_apps_widget;
+        }
 
-        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.all_apps_widget);
+        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), gridViewLayoutRes);
         Intent svcIntent = new Intent(context, AllappsWidgetService.class);
         svcIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         svcIntent.setData(Uri.parse(
