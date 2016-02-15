@@ -13,7 +13,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import yhh.bj4.parasitic.launcher.R;
-import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
 
@@ -73,9 +72,14 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     }
 
     @Override
-    public void onRefresh(String iconPackPkgName) {
+    public void onStartLoadingPackageName(String pkg) {
+
+    }
+
+    @Override
+    public void onFinishLoadingPackageName(String pkg) {
         if (DEBUG)
-            Log.d(TAG, "onRefresh called, pkg: " + iconPackPkgName);
+            Log.d(TAG, "onRefresh called, pkg: " + pkg);
         final IconLoader loader = mLoader.get();
         if (loader == null) return;
         mItems.clear();

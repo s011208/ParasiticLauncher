@@ -111,9 +111,9 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         }
         listItemList.clear();
         mAllappsContainerArray.clear();
-        if (mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg) == null) {
+        if (mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg) == null || mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).isEmpty()) {
             listItemList.addAll(mIconLoader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
-            mIconLoader.requestToLoadIconPack(mApplyIconPackPkg);
+            mIconLoader.requestToLoadIconPack(mApplyIconPackPkg, false);
             if (DEBUG) {
                 Log.d(TAG, "request to load: " + mApplyIconPackPkg);
             }
@@ -143,6 +143,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         mContext = null;
         mAllappsContainerArray.clear();
         listItemList.clear();
+        mIconLoader.removeCallback(this);
     }
 
     @Override
@@ -190,8 +191,14 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     }
 
     @Override
-    public void onRefresh(String iconPackPkgName) {
-        if (iconPackPkgName.equals(mApplyIconPackPkg)) {
+    public void onStartLoadingPackageName(String pkg) {
+
+    }
+
+    @Override
+    public void onFinishLoadingPackageName(String pkg) {
+        Log.d("QQQQ", "onFinishLoadingPackageName pkg: " + pkg + ", mApplyIconPackPkg: " + mApplyIconPackPkg);
+        if (pkg.equals(mApplyIconPackPkg)) {
             AppWidgetManager manager = AppWidgetManager.getInstance(mContext);
             manager.notifyAppWidgetViewDataChanged(mAppWidgetId, R.id.allapps_list);
         }

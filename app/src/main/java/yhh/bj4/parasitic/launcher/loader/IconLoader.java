@@ -18,48 +18,142 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.UserHandle;
-import android.util.Log;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
 
-
 /**
- * Created by Yen-Hsun_Huang on 2016/2/5.
+ * Created by yenhsunhuang on 2016/2/14.
  */
-public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callback {
-    private static final boolean DEBUG = true;
-    private static final boolean DEBUG_TRACE = true;
+public class IconLoader implements IconPackHelper.Callback {
     private static final String TAG = "IconLoader";
-    public static final int ICON_TYPE_NORMAL = 1 << 1;
-    private int mIconDpi;
-    private final Bitmap mDefaultIcon;
-    private static final HandlerThread sIconLoaderThread = new HandlerThread("Icon loader", android.os.Process.THREAD_PRIORITY_DEFAULT);
+    private static final boolean DEBUG = true;
     public static final String ICON_PACK_DEFAULT = "icon_pack_default";
+    private static int sDefaultIconSize;
+    private static IconLoader sInstance;
+
+    public synchronized static IconLoader getInstance(Context context) {
+        if (sInstance == null) {
+            sInstance = new IconLoader(context);
+        }
+        return sInstance;
+    }
+
+    public static Bitmap convertDrawableIconToBitmap(Drawable d) {
+        Canvas canvas = new Canvas();
+        d.setBounds(0, 0, sDefaultIconSize, sDefaultIconSize);
+        Bitmap b = Bitmap.createBitmap(sDefaultIconSize, sDefaultIconSize, Bitmap.Config.ARGB_8888);
+        canvas.setBitmap(b);
+        d.draw(canvas);
+        canvas.setBitmap(null);
+        return b;
+    }
+
+    private static final HandlerThread sIconLoaderThread = new HandlerThread("Icon loader", android.os.Process.THREAD_PRIORITY_DEFAULT);
 
     static {
         sIconLoaderThread.start();
     }
 
-    private static Handler sWorker = new Handler(sIconLoaderThread.getLooper());
+    public interface Callback {
+        void onStartLoadingPackageName(String pkg);
 
-    private static IconLoader sInstance;
+        void onFinishLoadingPackageName(String pkg);
+    }
+
+    private static class LoadTask implements Runnable {
+        private final Context mContext;
+        private final IconLoader mIconLoader;
+        private final String mLoadPkgName;
+
+        public LoadTask(Context context, IconLoader lh, String lp) {
+            mContext = context;
+            mIconLoader = lh;
+            mLoadPkgName = lp;
+        }
+
+        @Override
+        public void run() {
+            final ArrayList<Callback> callbacks = new ArrayList<>();
+            synchronized (mIconLoader.mCallbacks) {
+                callbacks.addAll(mIconLoader.mCallbacks);
+            }
+            mIconLoader.runOnMainThread(new Runnable() {
+                @Override
+                public void run() {
+                    for (Callback cb : callbacks) {
+                        cb.onStartLoadingPackageName(mLoadPkgName);
+                    }
+                }
+            });
+            final Intent queryMainIntent = new Intent(Intent.ACTION_MAIN);
+            queryMainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            PackageManager pm = mContext.getPackageManager();
+            final HashMap<ComponentName, InfoCache> iconMap = new HashMap<>();
+            final List<ResolveInfo> apps = pm.queryIntentActivities(queryMainIntent, 0);
+            for (ResolveInfo appInfo : apps) {
+                InfoCache icon;
+                ComponentName cn;
+                cn = new ComponentName(appInfo.activityInfo.packageName, appInfo.activityInfo.name);
+                if (pm == null || appInfo == null || appInfo.activityInfo == null) {
+                    return;
+                }
+                Drawable activityIcon;
+                if (IconLoader.ICON_PACK_DEFAULT.equals(mLoadPkgName)) {
+                    activityIcon = appInfo.activityInfo.loadIcon(pm);
+                } else {
+                    try {
+                        if (mContext == null || mIconLoader == null) {
+                            activityIcon = appInfo.activityInfo.loadIcon(pm);
+                        } else {
+                            int iconId = IconPackHelper.getInstance(mContext).getIconResIdViaComponentInfo("ComponentInfo{" + cn.flattenToString() + "}", mLoadPkgName);
+                            if (iconId != -1) {
+                                activityIcon = IconPackHelper.getInstance(mContext).getSpecIconPackIcon(mContext, mLoadPkgName, cn, mIconLoader);
+                            } else {
+                                activityIcon = IconPackHelper.getInstance(mContext).getUnspecIconForDefault(mContext, appInfo.activityInfo.loadIcon(pm), mLoadPkgName);
+                            }
+                        }
+                    } catch (Exception e) {
+                        activityIcon = appInfo.activityInfo.loadIcon(pm);
+                    }
+                }
+                String title = appInfo.loadLabel(pm).toString();
+
+                icon = new ActivityInfoCache();
+                icon.setIcon(activityIcon);
+                icon.setTitle(title);
+                icon.setBitmap(IconLoader.convertDrawableIconToBitmap(activityIcon));
+                icon.setComponentName(cn);
+                iconMap.put(cn, icon);
+            }
+            mIconLoader.mActivityInfoCache.put(mLoadPkgName, iconMap);
+            mIconLoader.runOnMainThread(new Runnable() {
+                @Override
+                public void run() {
+                    for (Callback cb : callbacks) {
+                        cb.onFinishLoadingPackageName(mLoadPkgName);
+                    }
+                }
+            });
+        }
+    }
 
     private final Context mContext;
-
+    private Handler mWorker = new Handler(sIconLoaderThread.getLooper());
     private final HashMap<String, HashMap<ComponentName, InfoCache>> mActivityInfoCache = new HashMap<>();
-
-    private static int sDefaultIconSize;
-    private final ArrayList<WeakReference<Callback>> mCallbacks = new ArrayList<>();
-    private LoadIconHelper mLoadIconHelper;
-
     private Handler mHandler = new Handler();
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    private int mIconDpi;
+    private final Bitmap mDefaultIcon;
+    private final IconPackHelper mIconPackHelper;
+    private final ArrayList<Callback> mCallbacks = new ArrayList<>();
+    private final ArrayList<String> mReloadIconPackList = new ArrayList<>();
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -73,119 +167,31 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
         }
     };
 
-    private void onPackageChanged(final String loadedPkg) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                IconPackHelper.getInstance(mContext).reloadAllIconPackList();
-                if (mActivityInfoCache.get(loadedPkg) == null) return;
-                requestToLoadIconPack(loadedPkg, true);
-                startToLoadIcon(loadedPkg);
-            }
-        }).start();
-    }
-
-    public synchronized static IconLoader getInstance(Context context) {
-        if (sInstance == null) {
-            sInstance = new IconLoader(context);
-        }
-        return sInstance;
-    }
-
-    private void runOnMainThread(Runnable task) {
-        if (android.os.Process.myTid() == sIconLoaderThread.getThreadId()) {
-            mHandler.post(task);
-        } else {
-            task.run();
-        }
-    }
-
-    @Override
-    public void onIconFinishLoading(final String iconPackPkgName) {
-        for (WeakReference<Callback> wr : mCallbacks) {
-            final Callback cb = wr.get();
-            if (cb != null)
-                runOnMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        cb.onRefresh(iconPackPkgName);
-                    }
-                });
-        }
-    }
-
-    @Override
-    public void onIconPackListLoadStart() {
-        if (DEBUG) {
-            Log.d(TAG, "onIconPackListLoadStart");
-        }
-    }
-
-    @Override
-    public void onIconPackListLoadFinish() {
-        if (DEBUG) {
-            Log.d(TAG, "onIconPackListLoadFinish");
-            for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
-                Log.d(TAG, "pack: " + pack.getIconPackPackageName() + ", title: " + pack.getIconPackPackageTitle());
-            }
-        }
-    }
-
-    @Override
-    public void onStartToLoadIconPackContent(String iconPackPkgName) {
-        if (DEBUG) {
-            Log.d(TAG, "onStartToLoadIconPackContent, iconPackPkgName: " + iconPackPkgName);
-        }
-    }
-
-    @Override
-    public void onFinishToLoadIconPackContent(String iconPackPkgName) {
-        if (DEBUG) {
-            Log.d(TAG, "onFinishToLoadIconPackContent, iconPackPkgName: " + iconPackPkgName);
-        }
-        startToLoadIcon(iconPackPkgName);
-    }
-
-    public interface Callback {
-        void onRefresh(String iconPackPkgName);
-    }
-
-    public void requestToLoadIconPack(final String pkg) {
-        requestToLoadIconPack(pkg, false);
-    }
-
-    public void requestToLoadIconPack(final String pkg, final boolean force) {
-        final IconPackHelper helper = IconPackHelper.getInstance(mContext);
-        if (force) {
-            helper.loadIconPackContent(pkg);
-        } else {
-            if (helper.hasIconPackLoaded(pkg)) {
-                return;
-            }
-            helper.loadIconPackContent(pkg);
-        }
-    }
-
-    private void initParams() {
-        sDefaultIconSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_icon_size);
-    }
-
     private IconLoader(Context context) {
         mContext = context.getApplicationContext();
+        registerReceiver();
         ActivityManager activityManager =
                 (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         mIconDpi = activityManager.getLauncherLargeIconDensity();
         mDefaultIcon = makeDefaultIcon();
-        registerReceiver();
-        initParams();
-        startToLoadIcon(ICON_PACK_DEFAULT);
-        IconPackHelper.getInstance(mContext).addCallback(this);
-        new Thread(new Runnable() {
+        sDefaultIconSize = mContext.getResources().getDimensionPixelSize(R.dimen.normal_icon_size);
+        mIconPackHelper = IconPackHelper.getInstance(mContext);
+        mIconPackHelper.addCallback(this);
+        loadAllIconPackList();
+        loadDefaultIcons();
+    }
+
+    private void loadDefaultIcons() {
+        mWorker.post(new LoadTask(mContext, IconLoader.this, ICON_PACK_DEFAULT));
+    }
+
+    private void loadAllIconPackList() {
+        mWorker.post(new Runnable() {
             @Override
             public void run() {
-                IconPackHelper.getInstance(mContext).reloadAllIconPackList();
+                mIconPackHelper.reloadAllIconPackList();
             }
-        }).start();
+        });
     }
 
     private void registerReceiver() {
@@ -197,37 +203,68 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
         mContext.registerReceiver(mReceiver, filter);
     }
 
-    public void addCallback(Callback cb) {
-        mCallbacks.add(new WeakReference(cb));
-    }
-
-    private void startToLoadIcon(String iconPackPkg) {
-        if (mLoadIconHelper != null) {
-            sWorker.removeCallbacks(mLoadIconHelper);
+    private void runOnMainThread(Runnable task) {
+        if (android.os.Process.myTid() == sIconLoaderThread.getThreadId()) {
+            mHandler.post(task);
+        } else {
+            task.run();
         }
-        HashMap<ComponentName, InfoCache> map = new HashMap<>();
-        mActivityInfoCache.put(iconPackPkg, map);
-        mLoadIconHelper = new LoadIconHelper(mContext, iconPackPkg, map, IconLoader.this, IconLoader.this);
-        sWorker.post(mLoadIconHelper);
     }
 
-    public InfoCache getActivityInfo(String iconPackPkg, ComponentName cn, int iconType) {
-        return mActivityInfoCache.get(iconPackPkg).get(cn);
+    public void addCallback(Callback cb) {
+        synchronized (mCallbacks) {
+            while (mCallbacks.contains(cb))
+                mCallbacks.remove(cb);
+            mCallbacks.add(cb);
+        }
+    }
+
+    public void removeCallback(Callback cb) {
+        synchronized (mCallbacks) {
+            while (mCallbacks.contains(cb))
+                mCallbacks.remove(cb);
+        }
     }
 
     public HashMap<ComponentName, InfoCache> getAllActivitiesInfoCache(String iconPackPkg) {
-        if (mActivityInfoCache.get(iconPackPkg) == null) return null;
+        if (mActivityInfoCache.get(iconPackPkg) == null)
+            return new HashMap<>();
         return new HashMap<>(mActivityInfoCache.get(iconPackPkg));
     }
 
-    public static Bitmap convertDrawableIconToBitmap(Drawable d) {
-        Canvas canvas = new Canvas();
-        d.setBounds(0, 0, sDefaultIconSize, sDefaultIconSize);
-        Bitmap b = Bitmap.createBitmap(sDefaultIconSize, sDefaultIconSize, Bitmap.Config.ARGB_8888);
-        canvas.setBitmap(b);
-        d.draw(canvas);
-        canvas.setBitmap(null);
-        return b;
+    public HashMap<ComponentName, InfoCache> requestToLoadIconPack(String pkgName, boolean forceReload) {
+        if (!forceReload) {
+            synchronized (mActivityInfoCache) {
+                if (mActivityInfoCache.containsKey(pkgName)) {
+                    return new HashMap<>(mActivityInfoCache.get(pkgName));
+                }
+            }
+        }
+        reloadIconPack(pkgName);
+        return new HashMap<>();
+    }
+
+    private void reloadIconPack(final String pkgName) {
+        if (ICON_PACK_DEFAULT.equals(pkgName)) {
+            loadDefaultIcons();
+        } else {
+            mWorker.post(new Runnable() {
+                @Override
+                public void run() {
+                    mIconPackHelper.loadIconPackContent(pkgName);
+                }
+            });
+        }
+    }
+
+    private void onPackageChanged(String pkgName) {
+        synchronized (mReloadIconPackList) {
+            while (mReloadIconPackList.contains(pkgName)) {
+                mReloadIconPackList.remove(pkgName);
+            }
+            mReloadIconPackList.add(pkgName);
+        }
+        loadAllIconPackList();
     }
 
     public Drawable getFullResDefaultActivityIcon() {
@@ -246,7 +283,7 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
         if (d == null) {
             d = getFullResDefaultActivityIcon();
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP || user != null) {
             return mContext.getPackageManager().getUserBadgedIcon(d, user);
         } else {
             return d;
@@ -299,5 +336,35 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
         d.draw(c);
         c.setBitmap(null);
         return b;
+    }
+
+
+    @Override
+    public void onIconPackListLoadStart() {
+
+    }
+
+    @Override
+    public void onIconPackListLoadFinish() {
+        synchronized (mReloadIconPackList) {
+            for (String pkg : mReloadIconPackList) {
+                for (IconPack iconPack : mIconPackHelper.getIconPackList()) {
+                    if (pkg.equals(iconPack.getIconPackPackageName())) {
+                        reloadIconPack(pkg);
+                        mReloadIconPackList.remove(pkg);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onStartToLoadIconPackContent(String iconPackPkgName) {
+
+    }
+
+    @Override
+    public void onFinishToLoadIconPackContent(String iconPackPkgName) {
+        mWorker.post(new LoadTask(mContext, IconLoader.this, iconPackPkgName));
     }
 }
