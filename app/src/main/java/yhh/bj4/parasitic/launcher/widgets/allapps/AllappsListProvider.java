@@ -19,6 +19,8 @@ import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
+import yhh.bj4.parasitic.launcher.utils.iconsorting.SortClickTime;
+import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFrequency;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromAToZ;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromZToA;
 import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
@@ -29,7 +31,7 @@ import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactory, IconLoader.Callback {
     private static final String TAG = "AllappsListProvider";
     private static final boolean DEBUG = true;
-    private ArrayList<InfoCache> listItemList = new ArrayList<>();
+    private ArrayList<InfoCache> mListItem = new ArrayList<>();
     private SparseArray<RemoteViews> mAllappsContainerArray = new SparseArray<>();
     private Context mContext;
     private final int mAppWidgetId;
@@ -111,26 +113,34 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
             // use default if not find
             mApplyIconPackPkg = IconLoader.ICON_PACK_DEFAULT;
         }
-        listItemList.clear();
+        mListItem.clear();
         mAllappsContainerArray.clear();
         if (mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg) == null || mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).isEmpty()) {
-            listItemList.addAll(mIconLoader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+            mListItem.addAll(mIconLoader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
             mIconLoader.requestToLoadIconPack(mApplyIconPackPkg, false);
             if (DEBUG) {
                 Log.d(TAG, "request to load: " + mApplyIconPackPkg);
             }
         } else {
-            listItemList.addAll(mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).values());
+            mListItem.addAll(mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).values());
         }
+        IconLoader.fillUpInfoCacheDatabaseData(mListItem, mContext);
+
         switch (mSortingRule) {
             case AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z:
-                Collections.sort(listItemList, new SortFromAToZ());
+                Collections.sort(mListItem, new SortFromAToZ());
                 break;
             case AllappsWidgetConfigurePreference.SORTING_RULE_Z_TO_A:
-                Collections.sort(listItemList, new SortFromZToA());
+                Collections.sort(mListItem, new SortFromZToA());
+                break;
+            case AllappsWidgetConfigurePreference.SORTING_RULE_MOSTLY:
+                Collections.sort(mListItem, new SortFrequency());
+                break;
+            case AllappsWidgetConfigurePreference.SORTING_RULE_RECENTLY:
+                Collections.sort(mListItem, new SortClickTime());
                 break;
             default:
-                Collections.sort(listItemList, new SortFromAToZ());
+                Collections.sort(mListItem, new SortFromAToZ());
                 break;
         }
     }
@@ -144,19 +154,19 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     public void onDestroy() {
         mContext = null;
         mAllappsContainerArray.clear();
-        listItemList.clear();
+        mListItem.clear();
         mIconLoader.removeCallback(this);
     }
 
     @Override
     public int getCount() {
-        return listItemList.size();
+        return mListItem.size();
     }
 
     @Override
     public RemoteViews getViewAt(int position) {
-        if (listItemList.size() <= position) return null;
-        final InfoCache info = listItemList.get(position);
+        if (mListItem.size() <= position) return null;
+        final InfoCache info = mListItem.get(position);
         RemoteViews iconContainer = new RemoteViews(mContext.getPackageName(), mAppLayoutResource);
         iconContainer.setImageViewBitmap(R.id.icon, info.getBitmap());
         iconContainer.setTextViewText(R.id.title, info.getTitle());
@@ -199,7 +209,6 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
 
     @Override
     public void onFinishLoadingPackageName(String pkg) {
-        Log.d("QQQQ", "onFinishLoadingPackageName pkg: " + pkg + ", mApplyIconPackPkg: " + mApplyIconPackPkg);
         if (pkg.equals(mApplyIconPackPkg)) {
             AppWidgetManager manager = AppWidgetManager.getInstance(mContext);
             manager.notifyAppWidgetViewDataChanged(mAppWidgetId, R.id.allapps_list);

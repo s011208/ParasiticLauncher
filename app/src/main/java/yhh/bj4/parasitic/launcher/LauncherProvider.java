@@ -1,5 +1,6 @@
 package yhh.bj4.parasitic.launcher;
 
+import android.content.ComponentName;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -10,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 /**
  * Created by yenhsunhuang on 2016/2/11.
@@ -24,14 +26,29 @@ public class LauncherProvider extends ContentProvider {
     public static final String COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY = "click_frequency";
     public static final String COLUMN_ACTIVITY_USAGE_CLICK_TIME = "click_time";
 
-    public static final Uri URI_ACTIVITY_USAGE = Uri.parse("content://" + PROVIDER_AUTHORITY + "/" + TABLE_ACTIVITY_USAGE);
+    private static final String URI_ACTIVITY_USAGE_PATTERN = TABLE_ACTIVITY_USAGE;
+    private static final String URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN = TABLE_ACTIVITY_USAGE + "/" + COLUMN_ACTIVITY_USAGE_PACKAGE_NAME;
+
+    public static final Uri URI_ACTIVITY_USAGE = Uri.parse("content://" + PROVIDER_AUTHORITY + "/" + URI_ACTIVITY_USAGE_PATTERN);
+
+    public static final Uri URI_ACTIVITY_USAGE_COMPONENT_INFO(ComponentName cn) {
+        return URI_ACTIVITY_USAGE_COMPONENT_INFO(cn.getPackageName(), cn.getClassName());
+    }
+
+    public static final Uri URI_ACTIVITY_USAGE_COMPONENT_INFO(String packageName, String className) {
+        return Uri.parse("content://" + PROVIDER_AUTHORITY + "/" + URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN
+                + "?" + COLUMN_ACTIVITY_USAGE_PACKAGE_NAME + "=" + packageName
+                + "&" + COLUMN_ACTIVITY_USAGE_CLASSNAME + "=" + className);
+    }
 
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
     private static final int MATCHER_ACTIVITY_USAGE = 0;
+    private static final int MATCHER_ACTIVITY_USAGE_COMPONENT_INFO = 1;
 
     static {
-        URI_MATCHER.addURI(PROVIDER_AUTHORITY, TABLE_ACTIVITY_USAGE, MATCHER_ACTIVITY_USAGE);
+        URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_ACTIVITY_USAGE_PATTERN, MATCHER_ACTIVITY_USAGE);
+        URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN, MATCHER_ACTIVITY_USAGE_COMPONENT_INFO);
     }
 
     private ContentProviderDatabase mContentProviderDatabase;
@@ -50,6 +67,15 @@ public class LauncherProvider extends ContentProvider {
         switch (URI_MATCHER.match(uri)) {
             case MATCHER_ACTIVITY_USAGE:
                 return mDatabase.query(TABLE_ACTIVITY_USAGE, projection, selection, selectionArgs, null, null, sortOrder);
+            case MATCHER_ACTIVITY_USAGE_COMPONENT_INFO:
+                final String pkg = uri.getQueryParameter(COLUMN_ACTIVITY_USAGE_PACKAGE_NAME);
+                final String clz = uri.getQueryParameter(COLUMN_ACTIVITY_USAGE_CLASSNAME);
+                return mDatabase.query(TABLE_ACTIVITY_USAGE, null
+                        , COLUMN_ACTIVITY_USAGE_PACKAGE_NAME + "='" + pkg + "' and " + COLUMN_ACTIVITY_USAGE_CLASSNAME + "='" + clz + "'"
+                        , null, null, null, null);
+            default:
+                Log.e("QQQQ", "no match with uri: " + uri.getEncodedPath());
+                break;
         }
         return null;
     }
@@ -66,6 +92,7 @@ public class LauncherProvider extends ContentProvider {
         long rowId = 0;
         switch (URI_MATCHER.match(uri)) {
             case MATCHER_ACTIVITY_USAGE:
+            case MATCHER_ACTIVITY_USAGE_COMPONENT_INFO:
                 rowId = mDatabase.insert(TABLE_ACTIVITY_USAGE, null, values);
                 uri = ContentUris.withAppendedId(uri, rowId);
                 return uri;
@@ -78,6 +105,12 @@ public class LauncherProvider extends ContentProvider {
         switch (URI_MATCHER.match(uri)) {
             case MATCHER_ACTIVITY_USAGE:
                 return mDatabase.delete(TABLE_ACTIVITY_USAGE, selection, selectionArgs);
+            case MATCHER_ACTIVITY_USAGE_COMPONENT_INFO:
+                final String pkg = uri.getQueryParameter(COLUMN_ACTIVITY_USAGE_PACKAGE_NAME);
+                final String clz = uri.getQueryParameter(COLUMN_ACTIVITY_USAGE_CLASSNAME);
+                return mDatabase.delete(TABLE_ACTIVITY_USAGE
+                        , COLUMN_ACTIVITY_USAGE_PACKAGE_NAME + "='" + pkg + "' and " + COLUMN_ACTIVITY_USAGE_CLASSNAME + "='" + clz + "'"
+                        , null);
         }
         return 0;
     }
@@ -87,6 +120,12 @@ public class LauncherProvider extends ContentProvider {
         switch (URI_MATCHER.match(uri)) {
             case MATCHER_ACTIVITY_USAGE:
                 return mDatabase.update(TABLE_ACTIVITY_USAGE, values, selection, selectionArgs);
+            case MATCHER_ACTIVITY_USAGE_COMPONENT_INFO:
+                final String pkg = uri.getQueryParameter(COLUMN_ACTIVITY_USAGE_PACKAGE_NAME);
+                final String clz = uri.getQueryParameter(COLUMN_ACTIVITY_USAGE_CLASSNAME);
+                return mDatabase.update(TABLE_ACTIVITY_USAGE, values
+                        , COLUMN_ACTIVITY_USAGE_PACKAGE_NAME + "='" + pkg + "' and " + COLUMN_ACTIVITY_USAGE_CLASSNAME + "='" + clz + "'"
+                        , null);
         }
         return 0;
     }
@@ -99,8 +138,8 @@ public class LauncherProvider extends ContentProvider {
                 + COLUMN_ID + "  INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_ACTIVITY_USAGE_PACKAGE_NAME + " TEXT,"
                 + COLUMN_ACTIVITY_USAGE_CLASSNAME + " TEXT,"
-                + COLUMN_ACTIVITY_USAGE_CLICK_TIME + " INTEGER,"
-                + COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY + " INTEGER)";
+                + COLUMN_ACTIVITY_USAGE_CLICK_TIME + " TEXT NOT NULL DEFAULT '0',"
+                + COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY + " INTEGER NOT NULL DEFAULT 0)";
 
         public ContentProviderDatabase(Context context) {
             super(context, DATABASE_NAME, null, VERSION);

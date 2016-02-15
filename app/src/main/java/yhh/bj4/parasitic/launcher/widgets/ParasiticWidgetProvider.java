@@ -18,7 +18,7 @@ import yhh.bj4.parasitic.launcher.R;
  */
 public class ParasiticWidgetProvider extends BaseWidgetProvider {
 
-    private static final String TAG = "QQQQ";
+    private static final String TAG = "ParasiticWidgetProvider";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {

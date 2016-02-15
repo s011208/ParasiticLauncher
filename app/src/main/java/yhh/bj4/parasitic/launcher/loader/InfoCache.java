@@ -15,7 +15,7 @@ public abstract class InfoCache {
     private Bitmap mBitmap;
     private ComponentName mComponentName;
     private long mClickTime;
-    private long mClickFrequency;
+    private int mClickFrequency;
 
     public void setTitle(String title) {
         mTitle = title;
@@ -50,18 +50,18 @@ public abstract class InfoCache {
     }
 
     public void setClickTime(long clickTime) {
-        mClickFrequency = clickTime;
+        mClickTime = clickTime;
     }
 
     public long getClickTime() {
         return mClickTime;
     }
 
-    public void setClickFrequency(long frequency) {
+    public void setClickFrequency(int frequency) {
         mClickFrequency = frequency;
     }
 
-    public long getClickFrequency() {
+    public int getClickFrequency() {
         return mClickFrequency;
     }
 

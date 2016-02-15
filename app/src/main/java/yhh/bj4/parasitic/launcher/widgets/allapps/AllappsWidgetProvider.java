@@ -3,9 +3,11 @@ package yhh.bj4.parasitic.launcher.widgets.allapps;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -17,6 +19,7 @@ import android.widget.RemoteViews;
 
 import java.io.File;
 
+import yhh.bj4.parasitic.launcher.LauncherProvider;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.Utilities;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
@@ -35,7 +38,7 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
     private static final boolean DEBUG = false;
 
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(final Context context, Intent intent) {
         super.onReceive(context, intent);
         final String action = intent.getAction();
         if (DEBUG) {
@@ -44,10 +47,32 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
         if (ON_ALL_APPS_ITEM_CLICK_INTENT.equals(action)) {
             int viewIndex = intent.getIntExtra(ON_ALL_APPS_ITEM_CLICK_INDEX, 0);
             String componentNameData = intent.getStringExtra(AllappsWidgetProvider.EXTRA_COMPONENTNAME);
-            ComponentName cn = ComponentName.unflattenFromString(componentNameData);
+            final ComponentName cn = ComponentName.unflattenFromString(componentNameData);
             if (DEBUG) {
                 Log.d(TAG, "click index: " + viewIndex + ", cn: " + cn.flattenToShortString());
             }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    ContentValues cv = new ContentValues();
+                    cv.put(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLICK_TIME, String.valueOf(System.currentTimeMillis()));
+                    int clickFrequency = 1;
+                    Cursor data = context.getContentResolver().query(LauncherProvider.URI_ACTIVITY_USAGE_COMPONENT_INFO(cn), null, null, null, null);
+                    if (data != null) {
+                        try {
+                            if (data.getCount() > 0) {
+                                data.moveToFirst();
+                                clickFrequency = data.getInt(data.getColumnIndex(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY));
+                                ++clickFrequency;
+                            }
+                        } finally {
+                            data.close();
+                        }
+                    }
+                    cv.put(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY, clickFrequency);
+                    context.getContentResolver().update(LauncherProvider.URI_ACTIVITY_USAGE_COMPONENT_INFO(cn), cv, null, null);
+                }
+            }).start();
             context.startActivity(InfoCache.getStartIntent(cn));
         }
     }

@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +12,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import yhh.bj4.parasitic.launcher.LauncherProvider;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
@@ -134,6 +137,22 @@ public class IconLoader implements IconPackHelper.Callback {
                 icon.setBitmap(IconLoader.convertDrawableIconToBitmap(activityIcon));
                 icon.setComponentName(cn);
                 iconMap.put(cn, icon);
+                Cursor c = mContext.getContentResolver().query(LauncherProvider.URI_ACTIVITY_USAGE_COMPONENT_INFO(cn.getPackageName(), cn.getClassName())
+                        , null, null, null, null);
+                if (c != null) {
+                    try {
+                        if (c.getCount() == 0) {
+                            ContentValues cv = new ContentValues();
+                            cv.put(LauncherProvider.COLUMN_ACTIVITY_USAGE_PACKAGE_NAME, cn.getPackageName());
+                            cv.put(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLASSNAME, cn.getClassName());
+                            cv.put(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY, 0);
+                            cv.put(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLICK_TIME, String.valueOf(System.currentTimeMillis()));
+                            mContext.getContentResolver().insert(LauncherProvider.URI_ACTIVITY_USAGE_COMPONENT_INFO(cn.getPackageName(), cn.getClassName()), cv);
+                        }
+                    } finally {
+                        c.close();
+                    }
+                }
             }
             synchronized (mIconLoader.mActivityInfoCache) {
                 mIconLoader.mActivityInfoCache.put(mLoadPkgName, iconMap);
@@ -229,6 +248,33 @@ public class IconLoader implements IconPackHelper.Callback {
         synchronized (mCallbacks) {
             while (mCallbacks.contains(cb))
                 mCallbacks.remove(cb);
+        }
+    }
+
+    public static void fillUpInfoCacheDatabaseData(ArrayList<InfoCache> infos, Context context) {
+        Cursor data = context.getContentResolver().query(LauncherProvider.URI_ACTIVITY_USAGE, null, null, null, null);
+        if (data != null) {
+            try {
+                final int columnPkg = data.getColumnIndex(LauncherProvider.COLUMN_ACTIVITY_USAGE_PACKAGE_NAME);
+                final int columnClz = data.getColumnIndex(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLASSNAME);
+                final int columnClickTime = data.getColumnIndex(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLICK_TIME);
+                final int columnClickFrequency = data.getColumnIndex(LauncherProvider.COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY);
+                while (data.moveToNext()) {
+                    final String pkg = data.getString(columnPkg);
+                    final String clz = data.getString(columnClz);
+                    final long clickTime = Long.valueOf(data.getString(columnClickTime));
+                    final int clickFrequency = data.getInt(columnClickFrequency);
+                    for (InfoCache info : infos) {
+                        if (info.getComponentName().equals(new ComponentName(pkg, clz))) {
+                            info.setClickFrequency(clickFrequency);
+                            info.setClickTime(clickTime);
+                            break;
+                        }
+                    }
+                }
+            } finally {
+                data.close();
+            }
         }
     }
 
