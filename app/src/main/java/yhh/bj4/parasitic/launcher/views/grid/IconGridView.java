@@ -51,5 +51,6 @@ public class IconGridView extends GridView {
         setNumColumns(GridView.AUTO_FIT);
         setVerticalScrollBarEnabled(false);
         setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
+        setDrawSelectorOnTop(false);
     }
 }

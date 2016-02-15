@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -26,6 +28,8 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     private final WeakReference<LayoutInflater> mInflater;
     private final ArrayList<InfoCache> mItems = new ArrayList<>();
     private final WeakReference<IconLoader> mLoader;
+    private boolean mShowCheckBox = true;
+    private final ArrayList<Boolean> mCheckedItem = new ArrayList<>();
 
     public IconGridAdapter(Context context) {
         mContext = new WeakReference<Context>(context);
@@ -55,7 +59,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         final LayoutInflater inflater = mInflater.get();
         if (inflater == null) return null;
         ViewHolder holder = null;
@@ -64,6 +68,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
             convertView = inflater.inflate(R.layout.icon_adapter_layout, null);
             holder.icon = (ImageView) convertView.findViewById(R.id.icon);
             holder.title = (TextView) convertView.findViewById(R.id.title);
+            holder.checkbox = (CheckBox) convertView.findViewById(R.id.checkbox);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -71,7 +76,28 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         final InfoCache activityCache = mItems.get(position);
         holder.icon.setImageBitmap(activityCache.getBitmap());
         holder.title.setText(activityCache.getTitle());
+        holder.checkbox.setOnCheckedChangeListener(null);
+        holder.checkbox.setVisibility(mShowCheckBox ? View.VISIBLE : View.INVISIBLE);
+        holder.checkbox.setChecked(mCheckedItem.get(position));
+        holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mCheckedItem.set(position, isChecked);
+                if (DEBUG) Log.v(TAG, "position: " + position + ", checked: " + isChecked);
+            }
+        });
         return convertView;
+    }
+
+    public void setCheckBoxVisibility(boolean show) {
+        mShowCheckBox = show;
+        mCheckedItem.clear();
+        if (mShowCheckBox) {
+            for (int i = 0; i < mItems.size(); ++i) {
+                mCheckedItem.add(false);
+            }
+        }
+        notifyDataSetChanged();
     }
 
     @Override
@@ -91,11 +117,23 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         if (IconLoader.ICON_PACK_DEFAULT.equals(pkg) == false) return;
         mItems.clear();
         mItems.addAll(loader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+        setCheckBoxVisibility(mShowCheckBox);
         notifyDataSetChanged();
+    }
+
+    public ArrayList<InfoCache> getCheckedItems() {
+        final ArrayList<InfoCache> rtn = new ArrayList<>();
+        for (int i = 0; i < mItems.size(); ++i) {
+            if (mCheckedItem.get(i)) {
+                rtn.add(mItems.get(i));
+            }
+        }
+        return rtn;
     }
 
     private static class ViewHolder {
         ImageView icon;
         TextView title;
+        CheckBox checkbox;
     }
 }

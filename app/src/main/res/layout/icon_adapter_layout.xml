@@ -13,6 +13,14 @@
         android:padding="3dp"
         android:scaleType="centerInside" />
 
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/icon"
+        android:layout_alignParentRight="true"
+        android:visibility="invisible" />
+
     <TextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
