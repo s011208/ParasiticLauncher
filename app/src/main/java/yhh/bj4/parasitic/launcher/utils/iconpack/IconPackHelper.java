@@ -522,8 +522,9 @@ public class IconPackHelper {
 
     public Drawable getUnspecIconForDefault(Context context, final Drawable icon, final String iconPackPkgName) {
         final Bitmap iconBitmap = ((BitmapDrawable) icon).getBitmap();
-        final int iconWidth = iconBitmap.getWidth();
-        final int iconHeight = iconBitmap.getHeight();
+        // make icon as square
+        final int iconWidth = Math.min(iconBitmap.getWidth(), iconBitmap.getHeight());
+        final int iconHeight = iconWidth;
 
         Canvas canvas = new Canvas();
         canvas.setDrawFilter(new PaintFlagsDrawFilter(Paint.DITHER_FLAG,
