@@ -54,6 +54,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
 
     @Override
     public void onCreate() {
+        Log.e(TAG, "onCreate id: " + mAppWidgetId);
     }
 
     private void loadConfiguration() {
@@ -97,6 +98,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     }
 
     private void loadData() {
+        Log.e(TAG, "loadData id: " + mAppWidgetId);
         loadConfiguration();
         boolean find = false;
         for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {

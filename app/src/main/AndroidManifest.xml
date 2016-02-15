@@ -52,6 +52,7 @@
         <provider
             android:name="yhh.bj4.parasitic.launcher.LauncherProvider"
             android:authorities="yhh.bj4.parasitic.launcher.LauncherProvider"></provider>
+        <service android:name=".services.UpdateWidgetsService"></service>
     </application>
 
 </manifest>
