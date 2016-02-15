@@ -98,6 +98,9 @@ public class IconPackHelper {
     private final Context mContext;
 
     public void loadIconPackContent(final String iconPackPkgName) {
+        if (DEBUG) {
+            Log.d(TAG, "loadIconPackContent start");
+        }
         synchronized (mLoadingIconPackList) {
             if (mLoadingIconPackList.contains(mLoadingIconPackList))
                 return;
@@ -122,6 +125,9 @@ public class IconPackHelper {
         }
         synchronized (mLoadingIconPackList) {
             mLoadingIconPackList.remove(iconPackPkgName);
+        }
+        if (DEBUG) {
+            Log.d(TAG, "loadIconPackContent finish");
         }
     }
 

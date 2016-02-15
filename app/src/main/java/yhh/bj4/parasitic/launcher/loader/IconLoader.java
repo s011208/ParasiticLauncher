@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.UserHandle;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -79,6 +80,9 @@ public class IconLoader implements IconPackHelper.Callback {
 
         @Override
         public void run() {
+            if (DEBUG) {
+                Log.d(TAG, "start LoadTask with icon pack: " + mLoadPkgName);
+            }
             final ArrayList<Callback> callbacks = new ArrayList<>();
             synchronized (mIconLoader.mCallbacks) {
                 callbacks.addAll(mIconLoader.mCallbacks);
@@ -236,10 +240,12 @@ public class IconLoader implements IconPackHelper.Callback {
         if (!forceReload) {
             synchronized (mActivityInfoCache) {
                 if (mActivityInfoCache.containsKey(pkgName)) {
+                    if (DEBUG) Log.d(TAG, "return loaded data");
                     return new HashMap<>(mActivityInfoCache.get(pkgName));
                 }
             }
         }
+        if (DEBUG) Log.d(TAG, "return unloaded data and start reload");
         reloadIconPack(pkgName);
         return new HashMap<>();
     }
@@ -283,8 +289,12 @@ public class IconLoader implements IconPackHelper.Callback {
         if (d == null) {
             d = getFullResDefaultActivityIcon();
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP || user != null) {
-            return mContext.getPackageManager().getUserBadgedIcon(d, user);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (user == null) {
+                return d;
+            } else {
+                return mContext.getPackageManager().getUserBadgedIcon(d, user);
+            }
         } else {
             return d;
         }
@@ -365,6 +375,9 @@ public class IconLoader implements IconPackHelper.Callback {
 
     @Override
     public void onFinishToLoadIconPackContent(String iconPackPkgName) {
+        if (DEBUG) {
+            Log.d(TAG, "onFinishToLoadIconPackContent");
+        }
         mWorker.post(new LoadTask(mContext, IconLoader.this, iconPackPkgName));
     }
 }
