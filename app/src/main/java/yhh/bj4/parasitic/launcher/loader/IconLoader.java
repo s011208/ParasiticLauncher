@@ -115,16 +115,16 @@ public class IconLoader implements LoadIconHelper.Callback, IconPackHelper.Callb
     }
 
     @Override
-    public void onIconPackLoadStart() {
+    public void onIconPackListLoadStart() {
         if (DEBUG) {
-            Log.d(TAG, "onIconPackLoadStart");
+            Log.d(TAG, "onIconPackListLoadStart");
         }
     }
 
     @Override
-    public void onIconPackLoadFinish() {
+    public void onIconPackListLoadFinish() {
         if (DEBUG) {
-            Log.d(TAG, "onIconPackLoadFinish");
+            Log.d(TAG, "onIconPackListLoadFinish");
             for (IconPack pack : IconPackHelper.getInstance(mContext).getIconPackList()) {
                 Log.d(TAG, "pack: " + pack.getIconPackPackageName() + ", title: " + pack.getIconPackPackageTitle());
             }

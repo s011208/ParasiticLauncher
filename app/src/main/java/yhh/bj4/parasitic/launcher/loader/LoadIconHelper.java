@@ -47,12 +47,12 @@ public class LoadIconHelper implements Runnable, LoadSingleIconTask.Callback, Ic
     }
 
     @Override
-    public void onIconPackLoadStart() {
+    public void onIconPackListLoadStart() {
 
     }
 
     @Override
-    public void onIconPackLoadFinish() {
+    public void onIconPackListLoadFinish() {
 
     }
 

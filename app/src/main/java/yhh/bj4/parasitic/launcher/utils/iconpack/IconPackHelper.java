@@ -59,9 +59,9 @@ public class IconPackHelper {
     private final ArrayList<String> mLoadingIconPackList = new ArrayList<>();
 
     public interface Callback {
-        void onIconPackLoadStart();
+        void onIconPackListLoadStart();
 
-        void onIconPackLoadFinish();
+        void onIconPackListLoadFinish();
 
         void onStartToLoadIconPackContent(String iconPackPkgName);
 
@@ -134,7 +134,7 @@ public class IconPackHelper {
     public void reloadAllIconPackList() {
         synchronized (mCallbacks) {
             for (Callback cb : mCallbacks) {
-                cb.onIconPackLoadStart();
+                cb.onIconPackListLoadStart();
             }
         }
         synchronized (mIconPackList) {
@@ -172,7 +172,7 @@ public class IconPackHelper {
         mIsLoadingIconPackList.set(false);
         synchronized (mCallbacks) {
             for (Callback cb : mCallbacks) {
-                cb.onIconPackLoadFinish();
+                cb.onIconPackListLoadFinish();
             }
         }
     }

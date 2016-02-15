@@ -120,12 +120,12 @@ public class IconPackListDialog extends DialogFragment {
         }
 
         @Override
-        public void onIconPackLoadStart() {
+        public void onIconPackListLoadStart() {
 
         }
 
         @Override
-        public void onIconPackLoadFinish() {
+        public void onIconPackListLoadFinish() {
             mIconPackList.clear();
             mIconPackList.addAll(mIconPackHelper.getIconPackList());
             notifyDataSetChanged();
