@@ -86,13 +86,14 @@ public class IconLoader implements IconPackHelper.Callback {
             if (DEBUG) {
                 Log.d(TAG, "start LoadTask with icon pack: " + mLoadPkgName);
             }
-            final ArrayList<Callback> callbacks = new ArrayList<>();
-            synchronized (mIconLoader.mCallbacks) {
-                callbacks.addAll(mIconLoader.mCallbacks);
-            }
+
             mIconLoader.runOnMainThread(new Runnable() {
                 @Override
                 public void run() {
+                    final ArrayList<Callback> callbacks = new ArrayList<>();
+                    synchronized (mIconLoader.mCallbacks) {
+                        callbacks.addAll(mIconLoader.mCallbacks);
+                    }
                     for (Callback cb : callbacks) {
                         cb.onStartLoadingPackageName(mLoadPkgName);
                     }
@@ -160,11 +161,18 @@ public class IconLoader implements IconPackHelper.Callback {
             mIconLoader.runOnMainThread(new Runnable() {
                 @Override
                 public void run() {
+                    final ArrayList<Callback> callbacks = new ArrayList<>();
+                    synchronized (mIconLoader.mCallbacks) {
+                        callbacks.addAll(mIconLoader.mCallbacks);
+                    }
                     for (Callback cb : callbacks) {
                         cb.onFinishLoadingPackageName(mLoadPkgName);
                     }
                 }
             });
+            if (DEBUG) {
+                Log.d(TAG, "finish LoadTask with icon pack: " + mLoadPkgName);
+            }
         }
     }
 

@@ -10,4 +10,7 @@
     <dimen name="large_app_icon_layout_title_text_size">20sp</dimen>
     <dimen name="icon_pack_dialog_list_adapter_title">16sp</dimen>
     <dimen name="confirm_area_text_size">14sp</dimen>
+
+    <dimen name="icon_grid_view_h_spacing">10dp</dimen>
+    <dimen name="icon_grid_view_v_spacing">10dp</dimen>
 </resources>

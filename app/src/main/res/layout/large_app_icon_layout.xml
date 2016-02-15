@@ -9,6 +9,7 @@
         android:id="@+id/icon"
         android:layout_width="@dimen/large_icon_size"
         android:layout_height="@dimen/large_icon_size"
+        android:layout_gravity="center_horizontal"
         android:padding="3dp"
         android:scaleType="centerInside" />
 

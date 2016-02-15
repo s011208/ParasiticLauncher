@@ -34,6 +34,9 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         mLoader = new WeakReference(loader);
         loader.addCallback(this);
         mItems.addAll(loader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+        if (DEBUG) {
+            Log.e(TAG, "mItems size: " + mItems.size());
+        }
     }
 
     @Override
@@ -73,15 +76,19 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
 
     @Override
     public void onStartLoadingPackageName(String pkg) {
-
+        if (DEBUG) {
+            Log.d(TAG, "onStartLoadingPackageName pkg: " + pkg);
+        }
     }
 
     @Override
     public void onFinishLoadingPackageName(String pkg) {
-        if (DEBUG)
-            Log.d(TAG, "onRefresh called, pkg: " + pkg);
+        if (DEBUG) {
+            Log.d(TAG, "onFinishLoadingPackageName pkg: " + pkg);
+        }
         final IconLoader loader = mLoader.get();
         if (loader == null) return;
+        if (IconLoader.ICON_PACK_DEFAULT.equals(pkg) == false) return;
         mItems.clear();
         mItems.addAll(loader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
         notifyDataSetChanged();
