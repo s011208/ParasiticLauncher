@@ -61,7 +61,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         ViewHolder holder = null;
         if (convertView == null) {
             holder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.normal_app_icon_layout, null);
+            convertView = inflater.inflate(R.layout.icon_adapter_layout, null);
             holder.icon = (ImageView) convertView.findViewById(R.id.icon);
             holder.title = (TextView) convertView.findViewById(R.id.title);
             convertView.setTag(holder);
