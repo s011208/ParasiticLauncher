@@ -135,7 +135,9 @@ public class IconLoader implements IconPackHelper.Callback {
                 icon.setComponentName(cn);
                 iconMap.put(cn, icon);
             }
-            mIconLoader.mActivityInfoCache.put(mLoadPkgName, iconMap);
+            synchronized (mIconLoader.mActivityInfoCache) {
+                mIconLoader.mActivityInfoCache.put(mLoadPkgName, iconMap);
+            }
             mIconLoader.runOnMainThread(new Runnable() {
                 @Override
                 public void run() {
@@ -231,9 +233,11 @@ public class IconLoader implements IconPackHelper.Callback {
     }
 
     public HashMap<ComponentName, InfoCache> getAllActivitiesInfoCache(String iconPackPkg) {
-        if (mActivityInfoCache.get(iconPackPkg) == null)
-            return new HashMap<>();
-        return new HashMap<>(mActivityInfoCache.get(iconPackPkg));
+        synchronized (mActivityInfoCache) {
+            if (mActivityInfoCache.get(iconPackPkg) == null)
+                return new HashMap<>();
+            return new HashMap<>(mActivityInfoCache.get(iconPackPkg));
+        }
     }
 
     public HashMap<ComponentName, InfoCache> requestToLoadIconPack(String pkgName, boolean forceReload) {
