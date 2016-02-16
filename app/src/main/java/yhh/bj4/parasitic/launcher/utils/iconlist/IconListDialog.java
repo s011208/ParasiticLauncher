@@ -7,6 +7,7 @@ import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import yhh.bj4.parasitic.launcher.R;
 
@@ -49,12 +50,20 @@ public class IconListDialog extends DialogFragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (REQUEST_SELECT_CUSTOMIZED_ICON_LIST == requestCode) {
             if (resultCode == Activity.RESULT_OK) {
-                Intent intent = getActivity().getIntent();
+                String[] selectedItem = data.getStringArrayExtra(SelectIconDialog.EXTRA_CHECKED_ITEMS);
+
+                Intent intent = null;
+                if (getActivity() != null) {
+                    intent = getActivity().getIntent();
+                }
                 if (intent == null) {
                     intent = new Intent();
                 }
                 intent.putExtra(EXTRA_ICON_LIST, ICON_LIST_CUSTOMIZED);
                 getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, intent);
+                for (String item : selectedItem) {
+                    Log.e("QQQQ", "item: " + item);
+                }
             }
         }
         super.onActivityResult(requestCode, resultCode, data);

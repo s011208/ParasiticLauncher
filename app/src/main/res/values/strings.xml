@@ -55,4 +55,5 @@
         <item>@string/icon_list_system</item>
         <item>@string/icon_list_customized</item>
     </string-array>
+    <string name="select_icons">Select icons</string>
 </resources>
