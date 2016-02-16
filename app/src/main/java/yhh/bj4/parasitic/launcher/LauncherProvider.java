@@ -37,6 +37,7 @@ public class LauncherProvider extends ContentProvider {
     public static final String COLUMN_WIDGET_ICONS_CLASSNAME = "clz";
     public static final String COLUMN_WIDGET_ICONS_WIDGET_ID = "widget_id";
     public static final String COLUMN_WIDGET_ICONS_ICON_ORDER = "icon_order";
+    public static final String COLUMN_WIDGET_ICONS_CONTAINER_ID = "container_id";
 
     private static final String URI_ACTIVITY_USAGE_PATTERN = TABLE_ACTIVITY_USAGE;
     private static final String URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN = TABLE_ACTIVITY_USAGE + "/" + COLUMN_ACTIVITY_USAGE_PACKAGE_NAME;
@@ -201,6 +202,7 @@ public class LauncherProvider extends ContentProvider {
                 + COLUMN_ID + "  INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_WIDGET_ICONS_PACKAGE_NAME + " TEXT NOT NULL,"
                 + COLUMN_WIDGET_ICONS_CLASSNAME + " TEXT NOT NULL,"
+                + COLUMN_WIDGET_ICONS_CONTAINER_ID + " INTEGER NOT NULL DEFAULT -1,"
                 + COLUMN_WIDGET_ICONS_ICON_ORDER + " INTEGER NOT NULL DEFAULT 0,"
                 + COLUMN_WIDGET_ICONS_WIDGET_ID + "INTEGER NOT NULL DEFAULT 0)";
 
