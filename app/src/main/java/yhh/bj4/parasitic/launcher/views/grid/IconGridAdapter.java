@@ -38,6 +38,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         mLoader = new WeakReference(loader);
         loader.addCallback(this);
         mItems.addAll(loader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+        setCheckBoxVisibility(mShowCheckBox);
         if (DEBUG) {
             Log.e(TAG, "mItems size: " + mItems.size());
         }
@@ -76,26 +77,26 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         final InfoCache activityCache = mItems.get(position);
         holder.icon.setImageBitmap(activityCache.getBitmap());
         holder.title.setText(activityCache.getTitle());
-        holder.checkbox.setOnCheckedChangeListener(null);
-        holder.checkbox.setVisibility(mShowCheckBox ? View.VISIBLE : View.INVISIBLE);
-        holder.checkbox.setChecked(mCheckedItem.get(position));
-        holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mCheckedItem.set(position, isChecked);
-                if (DEBUG) Log.v(TAG, "position: " + position + ", checked: " + isChecked);
-            }
-        });
+        if (!mCheckedItem.isEmpty()) {
+            holder.checkbox.setOnCheckedChangeListener(null);
+            holder.checkbox.setVisibility(mShowCheckBox ? View.VISIBLE : View.INVISIBLE);
+            holder.checkbox.setChecked(mCheckedItem.get(position));
+            holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    mCheckedItem.set(position, isChecked);
+                    if (DEBUG) Log.v(TAG, "position: " + position + ", checked: " + isChecked);
+                }
+            });
+        }
         return convertView;
     }
 
     public void setCheckBoxVisibility(boolean show) {
         mShowCheckBox = show;
         mCheckedItem.clear();
-        if (mShowCheckBox) {
-            for (int i = 0; i < mItems.size(); ++i) {
-                mCheckedItem.add(false);
-            }
+        for (int i = 0; i < mItems.size(); ++i) {
+            mCheckedItem.add(false);
         }
         notifyDataSetChanged();
     }
