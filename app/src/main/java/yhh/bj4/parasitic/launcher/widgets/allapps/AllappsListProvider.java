@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
+import yhh.bj4.parasitic.launcher.utils.iconlist.IconListDialog;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPack;
 import yhh.bj4.parasitic.launcher.utils.iconpack.IconPackHelper;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortClickTime;
@@ -44,6 +46,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
     private int mTextSize, mIconSize;
     private int mAppTitleTextColor = 0;
     private int mSortingRule = AllappsWidgetConfigurePreference.SORTING_RULE_A_TO_Z;
+    private int mIconList = IconListDialog.ICON_LIST_ALL;
 
     public AllappsListProvider(Context context, Intent intent) {
         mContext = context;
@@ -65,6 +68,7 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         mIconSize = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_SIZE, SizeListDialog.SIZE_NORMAL);
         mTextSizeIndex = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_APP_TITLE_TEXT_SIZE, SizeListDialog.SIZE_NORMAL);
         mAppTitleTextColor = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_APP_TITLE_TEXT_COLOR, 0);
+        mIconList = mPrefs.getInt(AllappsWidgetConfigurePreference.SPREF_KEY_ICON_LIST, IconListDialog.ICON_LIST_ALL);
         switch (mTextSizeIndex) {
             case SizeListDialog.SIZE_SMALL:
                 mTextSize = mContext.getResources().getDimensionPixelSize(R.dimen.small_app_icon_layout_title_text_size);
@@ -95,7 +99,8 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         if (DEBUG) {
             Log.i(TAG, "loadData, icon pack: " + mApplyIconPackPkg + ", mShowIcon: " + mShowIcon
                     + ", mTextSizeIndex: " + mTextSizeIndex + ", mAppTitleTextColor: " + mAppTitleTextColor
-                    + ", mSortingRule: " + mSortingRule);
+                    + ", mSortingRule: " + mSortingRule
+                    + ", mIconList: " + mIconList);
         }
     }
 
@@ -124,6 +129,26 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         } else {
             mListItem.addAll(mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).values());
         }
+        if (mIconList == IconListDialog.ICON_LIST_ALL) {
+            // do nothing
+        } else if (mIconList == IconListDialog.ICON_LIST_DOWNLOAD) {
+            final int mask = ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+            for (int i = mListItem.size() - 1; i >= 0; --i) {
+                InfoCache cache = mListItem.get(i);
+                if ((cache.getPackageInfoFlag() & mask) != 0) {
+                    mListItem.remove(i);
+                }
+            }
+        } else if (mIconList == IconListDialog.ICON_LIST_SYSTEM) {
+            final int mask = ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+            for (int i = mListItem.size() - 1; i >= 0; --i) {
+                InfoCache cache = mListItem.get(i);
+                if ((cache.getPackageInfoFlag() & mask) == 0) {
+                    mListItem.remove(i);
+                }
+            }
+        }
+
         IconLoader.fillUpInfoCacheDatabaseData(mListItem, mContext);
 
         switch (mSortingRule) {

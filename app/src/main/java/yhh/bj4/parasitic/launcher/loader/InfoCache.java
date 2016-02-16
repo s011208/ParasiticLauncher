@@ -16,6 +16,7 @@ public abstract class InfoCache {
     private ComponentName mComponentName;
     private long mClickTime;
     private int mClickFrequency;
+    private int mPackageInfoFlag;
 
     public void setTitle(String title) {
         mTitle = title;
@@ -63,6 +64,14 @@ public abstract class InfoCache {
 
     public int getClickFrequency() {
         return mClickFrequency;
+    }
+
+    public void setPackageInfoFlag(int flag) {
+        mPackageInfoFlag = flag;
+    }
+
+    public int getPackageInfoFlag() {
+        return mPackageInfoFlag;
     }
 
     public static Intent getStartIntent(ComponentName cn) {

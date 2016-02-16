@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
@@ -103,6 +105,7 @@ public class IconLoader implements IconPackHelper.Callback {
             queryMainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
             PackageManager pm = mContext.getPackageManager();
             final HashMap<ComponentName, InfoCache> iconMap = new HashMap<>();
+            List<PackageInfo> packageInfos = pm.getInstalledPackages(0);
             final List<ResolveInfo> apps = pm.queryIntentActivities(queryMainIntent, 0);
             for (ResolveInfo appInfo : apps) {
                 InfoCache icon;
@@ -132,11 +135,20 @@ public class IconLoader implements IconPackHelper.Callback {
                 }
                 String title = appInfo.loadLabel(pm).toString();
 
+                int packageInfoFlag = 0;
+                for (PackageInfo packageInfo : packageInfos) {
+                    if (cn.getPackageName().equals(packageInfo.packageName)) {
+                        packageInfoFlag = packageInfo.applicationInfo.flags;
+                        break;
+                    }
+                }
+
                 icon = new ActivityInfoCache();
                 icon.setIcon(activityIcon);
                 icon.setTitle(title);
                 icon.setBitmap(IconLoader.convertDrawableIconToBitmap(activityIcon));
                 icon.setComponentName(cn);
+                icon.setPackageInfoFlag(packageInfoFlag);
                 iconMap.put(cn, icon);
                 Cursor c = mContext.getContentResolver().query(LauncherProvider.URI_ACTIVITY_USAGE_COMPONENT_INFO(cn.getPackageName(), cn.getClassName())
                         , null, null, null, null);
