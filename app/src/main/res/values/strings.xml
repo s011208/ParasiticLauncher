@@ -44,4 +44,15 @@
         <item>@string/sorting_rule_recently</item>
         <item>@string/sorting_rule_mostly</item>
     </string-array>
+    <string name="icon_list">Icon list</string>
+    <string name="icon_list_all">All icons</string>
+    <string name="icon_list_download">Download</string>
+    <string name="icon_list_system">System</string>
+    <string name="icon_list_customized">Customized</string>
+    <string-array name="icon_list_array">
+        <item>@string/icon_list_all</item>
+        <item>@string/icon_list_download</item>
+        <item>@string/icon_list_system</item>
+        <item>@string/icon_list_customized</item>
+    </string-array>
 </resources>

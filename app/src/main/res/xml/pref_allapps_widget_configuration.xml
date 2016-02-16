@@ -25,6 +25,9 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/other_settings_title">
         <Preference
+            android:key="icon_list"
+            android:title="@string/icon_list"></Preference>
+        <Preference
             android:key="sorting_rule"
             android:title="@string/sorting_rule"></Preference>
     </PreferenceCategory>

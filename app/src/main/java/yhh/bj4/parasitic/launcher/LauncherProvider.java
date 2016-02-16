@@ -13,21 +13,35 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.sql.SQLException;
+
 /**
  * Created by yenhsunhuang on 2016/2/11.
  */
 public class LauncherProvider extends ContentProvider {
+    private static final String TAG = "LauncherProvider";
     public static final String PROVIDER_AUTHORITY = "yhh.bj4.parasitic.launcher.LauncherProvider";
 
     public static final String COLUMN_ID = "id";
+
+    // TABLE_ACTIVITY_USAGE
     public static final String TABLE_ACTIVITY_USAGE = "activity_usage";
     public static final String COLUMN_ACTIVITY_USAGE_PACKAGE_NAME = "pkg";
     public static final String COLUMN_ACTIVITY_USAGE_CLASSNAME = "clz";
     public static final String COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY = "click_frequency";
     public static final String COLUMN_ACTIVITY_USAGE_CLICK_TIME = "click_time";
 
+    // TABLE_WIDGET_ICONS
+    public static final String TABLE_WIDGET_ICONS = "widget_icons";
+    public static final String COLUMN_WIDGET_ICONS_PACKAGE_NAME = "pkg";
+    public static final String COLUMN_WIDGET_ICONS_CLASSNAME = "clz";
+    public static final String COLUMN_WIDGET_ICONS_WIDGET_ID = "widget_id";
+    public static final String COLUMN_WIDGET_ICONS_ICON_ORDER = "icon_order";
+
     private static final String URI_ACTIVITY_USAGE_PATTERN = TABLE_ACTIVITY_USAGE;
     private static final String URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN = TABLE_ACTIVITY_USAGE + "/" + COLUMN_ACTIVITY_USAGE_PACKAGE_NAME;
+
+    private static final String URI_WIDGET_ICONS_PATTERN = TABLE_WIDGET_ICONS;
 
     public static final Uri URI_ACTIVITY_USAGE = Uri.parse("content://" + PROVIDER_AUTHORITY + "/" + URI_ACTIVITY_USAGE_PATTERN);
 
@@ -41,14 +55,21 @@ public class LauncherProvider extends ContentProvider {
                 + "&" + COLUMN_ACTIVITY_USAGE_CLASSNAME + "=" + className);
     }
 
+    public static final Uri URI_WIDGET_ICONS_DATA(long widgetId) {
+        return Uri.parse("content://" + PROVIDER_AUTHORITY + "/" + URI_WIDGET_ICONS_PATTERN
+                + "?" + COLUMN_WIDGET_ICONS_WIDGET_ID + "=" + widgetId);
+    }
+
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
     private static final int MATCHER_ACTIVITY_USAGE = 0;
     private static final int MATCHER_ACTIVITY_USAGE_COMPONENT_INFO = 1;
+    private static final int MATCHER_WIDGET_ICONS_DATA = 2;
 
     static {
         URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_ACTIVITY_USAGE_PATTERN, MATCHER_ACTIVITY_USAGE);
         URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN, MATCHER_ACTIVITY_USAGE_COMPONENT_INFO);
+        URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_WIDGET_ICONS_PATTERN, MATCHER_WIDGET_ICONS_DATA);
     }
 
     private ContentProviderDatabase mContentProviderDatabase;
@@ -73,11 +94,45 @@ public class LauncherProvider extends ContentProvider {
                 return mDatabase.query(TABLE_ACTIVITY_USAGE, null
                         , COLUMN_ACTIVITY_USAGE_PACKAGE_NAME + "='" + pkg + "' and " + COLUMN_ACTIVITY_USAGE_CLASSNAME + "='" + clz + "'"
                         , null, null, null, null);
+            case MATCHER_WIDGET_ICONS_DATA:
+                long widgetId = Long.valueOf(uri.getQueryParameter(COLUMN_WIDGET_ICONS_WIDGET_ID));
+                return mDatabase.query(TABLE_WIDGET_ICONS, null
+                        , COLUMN_WIDGET_ICONS_WIDGET_ID + "=" + widgetId
+                        , null, null, null, COLUMN_WIDGET_ICONS_ICON_ORDER);
             default:
-                Log.e("QQQQ", "no match with uri: " + uri.getEncodedPath());
+                Log.e(TAG, "no match with uri: " + uri.getEncodedPath());
                 break;
         }
         return null;
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        switch (URI_MATCHER.match(uri)) {
+            case MATCHER_WIDGET_ICONS_DATA:
+                bulkInsertWidgetIconsIntoDatabase(values);
+                break;
+        }
+        return super.bulkInsert(uri, values);
+    }
+
+    private int bulkInsertWidgetIconsIntoDatabase(ContentValues[] values) {
+        int numInserted = 0;
+        try {
+            for (ContentValues cv : values) {
+                long newID = mDatabase.insertOrThrow(TABLE_WIDGET_ICONS, null, cv);
+                if (newID <= 0) {
+                    throw new SQLException("Failed to insert row");
+                }
+            }
+            mDatabase.setTransactionSuccessful();
+            numInserted = values.length;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            mDatabase.endTransaction();
+        }
+        return numInserted;
     }
 
     @Nullable
@@ -141,9 +196,18 @@ public class LauncherProvider extends ContentProvider {
                 + COLUMN_ACTIVITY_USAGE_CLICK_TIME + " TEXT NOT NULL DEFAULT '0',"
                 + COLUMN_ACTIVITY_USAGE_CLICK_FREQUENCY + " INTEGER NOT NULL DEFAULT 0)";
 
+        public static final String CREATE_TABLE_WIDGET_ICONS = "CREATE TABLE IF NOT EXISTS "
+                + TABLE_WIDGET_ICONS + " ("
+                + COLUMN_ID + "  INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + COLUMN_WIDGET_ICONS_PACKAGE_NAME + " TEXT NOT NULL,"
+                + COLUMN_WIDGET_ICONS_CLASSNAME + " TEXT NOT NULL,"
+                + COLUMN_WIDGET_ICONS_ICON_ORDER + " INTEGER NOT NULL DEFAULT 0,"
+                + COLUMN_WIDGET_ICONS_WIDGET_ID + "INTEGER NOT NULL DEFAULT 0)";
+
         public ContentProviderDatabase(Context context) {
             super(context, DATABASE_NAME, null, VERSION);
             getWritableDatabase().execSQL(CREATE_TABLE_ACTIVITY_USAGE_CMD);
+            getWritableDatabase().execSQL(CREATE_TABLE_WIDGET_ICONS);
         }
 
         @Override
