@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:state_pressed="true"
+        android:drawable="@drawable/checkbox_checked_off_bg" />
+    <item android:state_checked="false" android:state_pressed="true"
+        android:drawable="@drawable/checkbox_off_bg" />
+    <item android:state_checked="false"
+        android:drawable="@drawable/checkbox_on_bg" />
+    <item android:state_checked="true"
+        android:drawable="@drawable/checkbox_checked_on_bg" />
+</selector>

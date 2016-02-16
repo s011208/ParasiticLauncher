@@ -19,6 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/icon"
         android:layout_alignParentRight="true"
+        android:button="@drawable/checkbox_bg"
         android:visibility="invisible" />
 
     <TextView
