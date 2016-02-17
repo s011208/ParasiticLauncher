@@ -30,6 +30,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     private final WeakReference<IconLoader> mLoader;
     private boolean mShowCheckBox = true;
     private final ArrayList<Boolean> mCheckedItem = new ArrayList<>();
+    private boolean mUseCustomizedList = false;
 
     public IconGridAdapter(Context context) {
         mContext = new WeakReference<Context>(context);
@@ -37,7 +38,9 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         IconLoader loader = IconLoader.getInstance(context);
         mLoader = new WeakReference(loader);
         loader.addCallback(this);
-        mItems.addAll(loader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+        if (mUseCustomizedList) {
+            mItems.addAll(loader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+        }
         setCheckBoxVisibility(mShowCheckBox);
         if (DEBUG) {
             Log.e(TAG, "mItems size: " + mItems.size());
@@ -108,8 +111,19 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         }
     }
 
+    public void setCustomizedList(ArrayList<InfoCache> cache) {
+        mUseCustomizedList = true;
+        mItems.clear();
+        mItems.addAll(cache);
+        setCheckBoxVisibility(mShowCheckBox);
+        notifyDataSetChanged();
+    }
+
     @Override
     public void onFinishLoadingPackageName(String pkg) {
+        if (mUseCustomizedList) {
+            return;
+        }
         if (DEBUG) {
             Log.d(TAG, "onFinishLoadingPackageName pkg: " + pkg);
         }
