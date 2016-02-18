@@ -2,14 +2,17 @@ package yhh.bj4.parasitic.launcher.utils.iconlist;
 
 import android.content.ClipData;
 import android.content.Context;
+import android.graphics.Point;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.DragEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
+
+import java.util.HashMap;
+import java.util.Iterator;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.views.grid.IconGridAdapter;
@@ -26,8 +29,10 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
     private IconGridView mGridView;
     private IconGridAdapter mGridAdapter;
     private Context mContext;
-    private int mDragingIndex = -1;
+    private View mDraggingView;
+    private int mDraggingIndex = -1;
     private int mMovingIndex = -1;
+    private final HashMap<Integer, Point> mViewPosition = new HashMap<>();
 
     public IconSelectView(Context context) {
         this(context, null);
@@ -67,13 +72,7 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
                     child.setOnLongClickListener(new OnLongClickListener() {
                         @Override
                         public boolean onLongClick(View v) {
-                            IconGridAdapter.ViewHolder holder = (IconGridAdapter.ViewHolder) v.getTag();
-                            mDragingIndex = mMovingIndex = holder.getItemPosition();
-                            Log.d(TAG, "position: " + holder.getItemPosition());
-                            ClipData data = ClipData.newPlainText("", "");
-                            DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(child);
-                            child.startDrag(data, shadowBuilder, child, 0);
-                            child.setVisibility(View.INVISIBLE);
+                            startToDrag(v);
                             return true;
                         }
                     });
@@ -84,9 +83,60 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
         });
     }
 
+    private void startToDrag(View v) {
+        IconGridAdapter.ViewHolder holder = (IconGridAdapter.ViewHolder) v.getTag();
+        mDraggingIndex = mMovingIndex = holder.getItemPosition();
+        Log.d(TAG, "position: " + holder.getItemPosition());
+        ClipData data = ClipData.newPlainText("", "");
+        DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
+        v.startDrag(data, shadowBuilder, v, 0);
+        v.setVisibility(View.INVISIBLE);
+        mDraggingView = v;
+    }
+
+    private int getIndexByXY(final float x, final float y) {
+        int index = 0;
+        final int width = mGridView.getChildAt(0).getWidth();
+        final int height = mGridView.getChildAt(0).getHeight();
+        Iterator<Integer> positionIterator = mViewPosition.keySet().iterator();
+        while (positionIterator.hasNext()) {
+            final int key = positionIterator.next();
+            Point point = mViewPosition.get(key);
+            if (x > point.x && x < point.x + width
+                    && y > point.y && y < point.y + height) {
+                return key;
+            }
+        }
+        return index;
+    }
+
+    private void animateToChangePosition() {
+        Log.v(TAG, "mDraggingIndex: " + mDraggingIndex + ", mMovingIndex: " + mMovingIndex);
+        boolean moveToPrevious = mDraggingIndex < mMovingIndex;
+        int startIndex = moveToPrevious ? mDraggingIndex : mMovingIndex;
+        int endIndex = moveToPrevious ? mMovingIndex : mDraggingIndex;
+        for (int i = startIndex; i <= endIndex; ++i) {
+            final View child = mGridView.getChildAt(i);
+            int desIndex = moveToPrevious ? i + 1 : i - 1;
+            float desX, desY;
+            desX = mViewPosition.get(desIndex).x;
+            desY = mViewPosition.get(desIndex).y;
+            child.animate().x(desX).y(desY).start();
+        }
+    }
+
     @Override
     public void onItemListChanged() {
         initDragListener();
+    }
+
+    private void fillInViewPositions() {
+        mViewPosition.clear();
+        for (int i = 0; i < mGridView.getChildCount(); ++i) {
+            View child = mGridView.getChildAt(i);
+            IconGridAdapter.ViewHolder holder = (IconGridAdapter.ViewHolder) child.getTag();
+            mViewPosition.put(holder.getItemPosition(), new Point((int) child.getX(), (int) child.getY()));
+        }
     }
 
     @Override
@@ -94,20 +144,26 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
         final int action = event.getAction();
         final float x = event.getX();
         final float y = event.getY();
-        Log.v(TAG, "action: " + action);
         switch (event.getAction()) {
             case DragEvent.ACTION_DRAG_STARTED:
+                fillInViewPositions();
                 break;
             case DragEvent.ACTION_DRAG_ENTERED:
                 break;
             case DragEvent.ACTION_DRAG_LOCATION:
-                Log.v(TAG, "x: " + x + ", y: " + y);
+                mMovingIndex = getIndexByXY(x, y);
+                if (mMovingIndex == mDraggingIndex) {
+                    break;
+                }
+                animateToChangePosition();
                 break;
             case DragEvent.ACTION_DRAG_EXITED:
                 break;
             case DragEvent.ACTION_DROP:
                 break;
             case DragEvent.ACTION_DRAG_ENDED:
+                mDraggingView.setVisibility(View.VISIBLE);
+                break;
             default:
                 break;
         }
