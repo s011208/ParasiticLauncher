@@ -15,16 +15,16 @@ import yhh.bj4.parasitic.launcher.views.grid.IconGridView;
  */
 public class IconSelectActivity extends Activity {
 
-    private IconGridView mIconGridView;
-    private IconGridAdapter mIconGridAdapter;
+//    private IconGridView mIconGridView;
+//    private IconGridAdapter mIconGridAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.icon_select_activity);
-        mIconGridView = (IconGridView) findViewById(R.id.grid);
-        mIconGridAdapter = new IconGridAdapter(IconSelectActivity.this);
-        mIconGridAdapter.setCustomizedList(new ArrayList<InfoCache>());
-        mIconGridView.setAdapter(mIconGridAdapter);
+        setContentView(R.layout.icon_select_view);
+//        mIconGridView = (IconGridView) findViewById(R.id.grid);
+//        mIconGridAdapter = new IconGridAdapter(IconSelectActivity.this);
+//        mIconGridAdapter.setCustomizedList(new ArrayList<InfoCache>());
+//        mIconGridView.setAdapter(mIconGridAdapter);
     }
 }

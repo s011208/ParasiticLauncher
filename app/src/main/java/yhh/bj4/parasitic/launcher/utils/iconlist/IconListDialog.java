@@ -29,9 +29,10 @@ public class IconListDialog extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (which == ICON_LIST_CUSTOMIZED) {
-                            SelectIconDialog selectIconDialog = new SelectIconDialog();
-                            selectIconDialog.setTargetFragment(IconListDialog.this, REQUEST_SELECT_CUSTOMIZED_ICON_LIST);
-                            selectIconDialog.show(getFragmentManager(), SelectIconDialog.class.getName());
+//                            SelectIconDialog selectIconDialog = new SelectIconDialog();
+//                            selectIconDialog.setTargetFragment(IconListDialog.this, REQUEST_SELECT_CUSTOMIZED_ICON_LIST);
+//                            selectIconDialog.show(getFragmentManager(), SelectIconDialog.class.getName());
+                            getActivity().startActivity(new Intent(getActivity(), IconSelectActivity.class));
                         } else {
                             if (getTargetFragment() != null) {
                                 Intent intent = getActivity().getIntent();

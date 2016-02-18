@@ -22,6 +22,10 @@ import yhh.bj4.parasitic.launcher.loader.InfoCache;
  * Created by yenhsunhuang on 2016/2/6.
  */
 public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback {
+    public interface Callback {
+        void onItemListChanged();
+    }
+
     private static final boolean DEBUG = true;
     private static final String TAG = "IconGridAdapter";
     private final WeakReference<Context> mContext;
@@ -31,6 +35,7 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     private boolean mShowCheckBox = true;
     private final ArrayList<Boolean> mCheckedItem = new ArrayList<>();
     private boolean mUseCustomizedList = false;
+    private WeakReference<Callback> mCallback;
 
     public IconGridAdapter(Context context) {
         mContext = new WeakReference<Context>(context);
@@ -38,13 +43,17 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         IconLoader loader = IconLoader.getInstance(context);
         mLoader = new WeakReference(loader);
         loader.addCallback(this);
-        if (mUseCustomizedList) {
+        if (!mUseCustomizedList) {
             mItems.addAll(loader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
         }
         setCheckBoxVisibility(mShowCheckBox);
         if (DEBUG) {
-            Log.e(TAG, "mItems size: " + mItems.size());
+            Log.e(TAG, "mItems size: " + mItems.size() + ", mUseCustomizedList: " + mUseCustomizedList);
         }
+    }
+
+    public void setCallback(Callback cb) {
+        mCallback = new WeakReference<Callback>(cb);
     }
 
     @Override
@@ -80,6 +89,8 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         final InfoCache activityCache = mItems.get(position);
         holder.icon.setImageBitmap(activityCache.getBitmap());
         holder.title.setText(activityCache.getTitle());
+        holder.position = position;
+
         if (!mCheckedItem.isEmpty()) {
             holder.checkbox.setOnCheckedChangeListener(null);
             holder.checkbox.setVisibility(mShowCheckBox ? View.VISIBLE : View.INVISIBLE);
@@ -120,6 +131,15 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
     }
 
     @Override
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        if (mCallback == null) return;
+        final Callback cb = mCallback.get();
+        if (cb == null) return;
+        cb.onItemListChanged();
+    }
+
+    @Override
     public void onFinishLoadingPackageName(String pkg) {
         if (mUseCustomizedList) {
             return;
@@ -146,9 +166,14 @@ public class IconGridAdapter extends BaseAdapter implements IconLoader.Callback 
         return rtn;
     }
 
-    private static class ViewHolder {
+    public static class ViewHolder {
         ImageView icon;
         TextView title;
         CheckBox checkbox;
+        int position;
+
+        public int getItemPosition() {
+            return position;
+        }
     }
 }

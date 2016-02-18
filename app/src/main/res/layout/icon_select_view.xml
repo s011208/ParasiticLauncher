@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<yhh.bj4.parasitic.launcher.utils.iconlist.IconSelectView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageButton
+        android:id="@+id/add_folder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/checkbox_checked_on_bg" />
+
+    <yhh.bj4.parasitic.launcher.views.grid.IconGridView
+        android:id="@+id/gridview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/add_folder"></yhh.bj4.parasitic.launcher.views.grid.IconGridView>
+
+</yhh.bj4.parasitic.launcher.utils.iconlist.IconSelectView>
