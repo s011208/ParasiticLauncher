@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.database.Cursor;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
@@ -15,7 +16,9 @@ import android.widget.RemoteViewsService;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import yhh.bj4.parasitic.launcher.LauncherProvider;
 import yhh.bj4.parasitic.launcher.R;
+import yhh.bj4.parasitic.launcher.loader.ActivityInfoCache;
 import yhh.bj4.parasitic.launcher.loader.IconLoader;
 import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.iconlist.IconListDialog;
@@ -121,7 +124,12 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
         mListItem.clear();
         mAllappsContainerArray.clear();
         if (mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg) == null || mIconLoader.getAllActivitiesInfoCache(mApplyIconPackPkg).isEmpty()) {
-            mListItem.addAll(mIconLoader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+            ArrayList<InfoCache> providerCache = getInfoCacheFromProvider(mApplyIconPackPkg);
+            if (providerCache.isEmpty()) {
+                mListItem.addAll(mIconLoader.getAllActivitiesInfoCache(IconLoader.ICON_PACK_DEFAULT).values());
+            } else {
+                mListItem.addAll(providerCache);
+            }
             mIconLoader.requestToLoadIconPack(mApplyIconPackPkg, false);
             if (DEBUG) {
                 Log.d(TAG, "request to load: " + mApplyIconPackPkg);
@@ -238,5 +246,20 @@ public class AllappsListProvider implements RemoteViewsService.RemoteViewsFactor
             AppWidgetManager manager = AppWidgetManager.getInstance(mContext);
             manager.notifyAppWidgetViewDataChanged(mAppWidgetId, R.id.allapps_list);
         }
+    }
+
+    private ArrayList<InfoCache> getInfoCacheFromProvider(String iconPack) {
+        final ArrayList<InfoCache> rtn = new ArrayList<InfoCache>();
+        Cursor c = mContext.getContentResolver().query(LauncherProvider.URI_INFO_CACHE(iconPack), null, null, null, null);
+        if (c != null) {
+            try {
+                while (c.moveToNext()) {
+                    rtn.add(new ActivityInfoCache(c));
+                }
+            } finally {
+                c.close();
+            }
+        }
+        return rtn;
     }
 }

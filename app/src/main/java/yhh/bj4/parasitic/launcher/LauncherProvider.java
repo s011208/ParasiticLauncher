@@ -39,8 +39,18 @@ public class LauncherProvider extends ContentProvider {
     public static final String COLUMN_WIDGET_ICONS_ICON_ORDER = "icon_order";
     public static final String COLUMN_WIDGET_ICONS_CONTAINER_ID = "container_id";
 
+    // TABLE_CACHE_INFO_CACHE
+    public static final String TABLE_INFO_CACHE = "info_cache";
+    public static final String COLUMN_INFO_CACHE_ICON_PACK = "icon_pack";
+    public static final String COLUMN_INFO_CACHE_PACKAGE_NAME = "pkg";
+    public static final String COLUMN_INFO_CACHE_CLASSNAME = "clz";
+    public static final String COLUMN_INFO_CACHE_ICON_LABEL = "icon_label";
+    public static final String COLUMN_INFO_CACHE_ICON_BITMAP = "bitmap";
+    public static final String COLUMN_INFO_CACHE_PACKAGE_INFO_FLAG = "package_info_flag";
+
     private static final String URI_ACTIVITY_USAGE_PATTERN = TABLE_ACTIVITY_USAGE;
     private static final String URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN = TABLE_ACTIVITY_USAGE + "/" + COLUMN_ACTIVITY_USAGE_PACKAGE_NAME;
+    private static final String URI_INFO_CACHE_PATTERN = TABLE_INFO_CACHE;
 
     private static final String URI_WIDGET_ICONS_PATTERN = TABLE_WIDGET_ICONS;
 
@@ -61,16 +71,23 @@ public class LauncherProvider extends ContentProvider {
                 + "?" + COLUMN_WIDGET_ICONS_WIDGET_ID + "=" + widgetId);
     }
 
+    public static final Uri URI_INFO_CACHE(String iconPack) {
+        return Uri.parse("content://" + PROVIDER_AUTHORITY + "/" + URI_INFO_CACHE_PATTERN
+                + "?" + COLUMN_INFO_CACHE_ICON_PACK + "=" + iconPack);
+    }
+
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
     private static final int MATCHER_ACTIVITY_USAGE = 0;
     private static final int MATCHER_ACTIVITY_USAGE_COMPONENT_INFO = 1;
     private static final int MATCHER_WIDGET_ICONS_DATA = 2;
+    private static final int MATCHER_INFO_CACHE = 3;
 
     static {
         URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_ACTIVITY_USAGE_PATTERN, MATCHER_ACTIVITY_USAGE);
         URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_ACTIVITY_USAGE_COMPONENT_INFO_PATTERN, MATCHER_ACTIVITY_USAGE_COMPONENT_INFO);
         URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_WIDGET_ICONS_PATTERN, MATCHER_WIDGET_ICONS_DATA);
+        URI_MATCHER.addURI(PROVIDER_AUTHORITY, URI_INFO_CACHE_PATTERN, MATCHER_INFO_CACHE);
     }
 
     private ContentProviderDatabase mContentProviderDatabase;
@@ -100,6 +117,10 @@ public class LauncherProvider extends ContentProvider {
                 return mDatabase.query(TABLE_WIDGET_ICONS, null
                         , COLUMN_WIDGET_ICONS_WIDGET_ID + "=" + widgetId
                         , null, null, null, COLUMN_WIDGET_ICONS_ICON_ORDER);
+            case MATCHER_INFO_CACHE:
+                final String iconPack = uri.getQueryParameter(COLUMN_INFO_CACHE_ICON_PACK);
+                return mDatabase.query(TABLE_INFO_CACHE, null
+                        , COLUMN_INFO_CACHE_ICON_PACK + "='" + iconPack + "'", null, null, null, null);
             default:
                 Log.e(TAG, "no match with uri: " + uri.getEncodedPath());
                 break;
@@ -111,17 +132,23 @@ public class LauncherProvider extends ContentProvider {
     public int bulkInsert(Uri uri, ContentValues[] values) {
         switch (URI_MATCHER.match(uri)) {
             case MATCHER_WIDGET_ICONS_DATA:
-                bulkInsertWidgetIconsIntoDatabase(values);
+                bulkInsertIntoDatabase(TABLE_WIDGET_ICONS, values);
+                break;
+            case MATCHER_INFO_CACHE:
+                final String iconPack = uri.getQueryParameter(COLUMN_INFO_CACHE_ICON_PACK);
+                mDatabase.delete(TABLE_INFO_CACHE, COLUMN_INFO_CACHE_ICON_PACK + "='" + iconPack + "'", null);
+                bulkInsertIntoDatabase(TABLE_INFO_CACHE, values);
                 break;
         }
         return super.bulkInsert(uri, values);
     }
 
-    private int bulkInsertWidgetIconsIntoDatabase(ContentValues[] values) {
+    private int bulkInsertIntoDatabase(String table, ContentValues[] values) {
         int numInserted = 0;
+        mDatabase.beginTransaction();
         try {
             for (ContentValues cv : values) {
-                long newID = mDatabase.insertOrThrow(TABLE_WIDGET_ICONS, null, cv);
+                long newID = mDatabase.insertOrThrow(table, null, cv);
                 if (newID <= 0) {
                     throw new SQLException("Failed to insert row");
                 }
@@ -182,6 +209,12 @@ public class LauncherProvider extends ContentProvider {
                 return mDatabase.update(TABLE_ACTIVITY_USAGE, values
                         , COLUMN_ACTIVITY_USAGE_PACKAGE_NAME + "='" + pkg + "' and " + COLUMN_ACTIVITY_USAGE_CLASSNAME + "='" + clz + "'"
                         , null);
+            case MATCHER_INFO_CACHE:
+                final String iconPack = uri.getQueryParameter(COLUMN_INFO_CACHE_ICON_PACK);
+                final String packageName = values.getAsString(COLUMN_INFO_CACHE_PACKAGE_NAME);
+                final String className = values.getAsString(COLUMN_INFO_CACHE_CLASSNAME);
+                return mDatabase.update(TABLE_INFO_CACHE, values, COLUMN_INFO_CACHE_ICON_PACK + "='" + iconPack + "' and "
+                        + COLUMN_INFO_CACHE_PACKAGE_NAME + "='" + packageName + "' and " + COLUMN_INFO_CACHE_CLASSNAME + "='" + className + "'", null);
         }
         return 0;
     }
@@ -206,10 +239,21 @@ public class LauncherProvider extends ContentProvider {
                 + COLUMN_WIDGET_ICONS_ICON_ORDER + " INTEGER NOT NULL DEFAULT 0,"
                 + COLUMN_WIDGET_ICONS_WIDGET_ID + "INTEGER NOT NULL DEFAULT 0)";
 
+        public static final String CREATE_TABLE_WIDGET_INFO_CACHE = "CREATE TABLE IF NOT EXISTS "
+                + TABLE_INFO_CACHE + " ("
+                + COLUMN_ID + "  INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + COLUMN_INFO_CACHE_ICON_PACK + " TEXT NOT NULL,"
+                + COLUMN_INFO_CACHE_PACKAGE_NAME + " TEXT NOT NULL,"
+                + COLUMN_INFO_CACHE_CLASSNAME + " TEXT NOT NULL,"
+                + COLUMN_INFO_CACHE_ICON_LABEL + " TEXT NOT NULL,"
+                + COLUMN_INFO_CACHE_PACKAGE_INFO_FLAG + " INTEGER NOT NULL DEFAULT 0,"
+                + COLUMN_INFO_CACHE_ICON_BITMAP + " BLOB)";
+
         public ContentProviderDatabase(Context context) {
             super(context, DATABASE_NAME, null, VERSION);
             getWritableDatabase().execSQL(CREATE_TABLE_ACTIVITY_USAGE_CMD);
             getWritableDatabase().execSQL(CREATE_TABLE_WIDGET_ICONS);
+            getWritableDatabase().execSQL(CREATE_TABLE_WIDGET_INFO_CACHE);
         }
 
         @Override

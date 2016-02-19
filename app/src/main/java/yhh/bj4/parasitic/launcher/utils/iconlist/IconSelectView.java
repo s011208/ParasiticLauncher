@@ -50,7 +50,7 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        if (DEBUG) Log.d(TAG, "onFinishInflate");
+        if (DEBUG) Log.v(TAG, "onFinishInflate");
         mAddFolderButton = (ImageButton) findViewById(R.id.add_folder);
         mGridView = (IconGridView) findViewById(R.id.gridview);
         mGridAdapter = new IconGridAdapter(mContext);
@@ -77,7 +77,8 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
                         }
                     });
                 }
-                Log.i(TAG, "mGridView child count: " + mGridView.getCount());
+                if (DEBUG)
+                    Log.v(TAG, "mGridView child count: " + mGridView.getCount());
                 return false;
             }
         });
@@ -86,7 +87,7 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
     private void startToDrag(View v) {
         IconGridAdapter.ViewHolder holder = (IconGridAdapter.ViewHolder) v.getTag();
         mDraggingIndex = mMovingIndex = holder.getItemPosition();
-        Log.d(TAG, "position: " + holder.getItemPosition());
+        if (DEBUG) Log.v(TAG, "startToDrag position: " + holder.getItemPosition());
         ClipData data = ClipData.newPlainText("", "");
         DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
         v.startDrag(data, shadowBuilder, v, 0);
@@ -95,7 +96,8 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
     }
 
     private int getIndexByXY(final float x, final float y) {
-        int index = 0;
+        if (DEBUG)
+            Log.v(TAG, "getIndexByXY, x: " + x + ", y: " + y);
         final int width = mGridView.getChildAt(0).getWidth();
         final int height = mGridView.getChildAt(0).getHeight();
         Iterator<Integer> positionIterator = mViewPosition.keySet().iterator();
@@ -104,24 +106,23 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
             Point point = mViewPosition.get(key);
             if (x > point.x && x < point.x + width
                     && y > point.y && y < point.y + height) {
+                if (DEBUG) Log.v(TAG, "return key: " + key);
                 return key;
             }
         }
-        return index;
+        return mMovingIndex;
     }
 
     private void animateToChangePosition() {
-        Log.v(TAG, "mDraggingIndex: " + mDraggingIndex + ", mMovingIndex: " + mMovingIndex);
+        if (DEBUG)
+            Log.v(TAG, "mDraggingIndex: " + mDraggingIndex + ", mMovingIndex: " + mMovingIndex);
         boolean moveToPrevious = mDraggingIndex < mMovingIndex;
         int startIndex = moveToPrevious ? mDraggingIndex : mMovingIndex;
         int endIndex = moveToPrevious ? mMovingIndex : mDraggingIndex;
-        for (int i = startIndex; i <= endIndex; ++i) {
+        for (int i = 1; i < mGridView.getChildCount() - 1; ++i) {
             final View child = mGridView.getChildAt(i);
             int desIndex = moveToPrevious ? i + 1 : i - 1;
-            float desX, desY;
-            desX = mViewPosition.get(desIndex).x;
-            desY = mViewPosition.get(desIndex).y;
-            child.animate().x(desX).y(desY).start();
+            child.animate().x(mViewPosition.get(desIndex).x).y(mViewPosition.get(desIndex).y).start();
         }
     }
 
@@ -144,7 +145,7 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
         final int action = event.getAction();
         final float x = event.getX();
         final float y = event.getY();
-        switch (event.getAction()) {
+        switch (action) {
             case DragEvent.ACTION_DRAG_STARTED:
                 fillInViewPositions();
                 break;
@@ -152,6 +153,7 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
                 break;
             case DragEvent.ACTION_DRAG_LOCATION:
                 mMovingIndex = getIndexByXY(x, y);
+                Log.e(TAG, "ACTION_DRAG_LOCATION mMovingIndex: " + mMovingIndex);
                 if (mMovingIndex == mDraggingIndex) {
                     break;
                 }
@@ -163,6 +165,11 @@ public class IconSelectView extends RelativeLayout implements IconGridAdapter.Ca
                 break;
             case DragEvent.ACTION_DRAG_ENDED:
                 mDraggingView.setVisibility(View.VISIBLE);
+                for (int i = 0; i < mGridView.getChildCount(); ++i) {
+                    final View child = mGridView.getChildAt(i);
+                    child.setX(mViewPosition.get(i).x);
+                    child.setY(mViewPosition.get(i).y);
+                }
                 break;
             default:
                 break;

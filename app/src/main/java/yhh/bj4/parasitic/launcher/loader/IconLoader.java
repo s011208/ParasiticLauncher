@@ -18,6 +18,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -26,6 +27,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import yhh.bj4.parasitic.launcher.LauncherProvider;
@@ -149,6 +151,7 @@ public class IconLoader implements IconPackHelper.Callback {
                 icon.setBitmap(IconLoader.convertDrawableIconToBitmap(activityIcon));
                 icon.setComponentName(cn);
                 icon.setPackageInfoFlag(packageInfoFlag);
+                icon.setIconPackPackage(mLoadPkgName);
                 iconMap.put(cn, icon);
                 Cursor c = mContext.getContentResolver().query(LauncherProvider.URI_ACTIVITY_USAGE_COMPONENT_INFO(cn.getPackageName(), cn.getClassName())
                         , null, null, null, null);
@@ -170,6 +173,19 @@ public class IconLoader implements IconPackHelper.Callback {
             synchronized (mIconLoader.mActivityInfoCache) {
                 mIconLoader.mActivityInfoCache.put(mLoadPkgName, iconMap);
             }
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... params) {
+                    ContentValues[] cvs = new ContentValues[iconMap.values().size()];
+                    Iterator<InfoCache> cacheIterator = iconMap.values().iterator();
+                    int counter = 0;
+                    while (cacheIterator.hasNext()) {
+                        cvs[counter++] = cacheIterator.next().save();
+                    }
+                    mContext.getContentResolver().bulkInsert(LauncherProvider.URI_INFO_CACHE(mLoadPkgName), cvs);
+                    return null;
+                }
+            }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             mIconLoader.runOnMainThread(new Runnable() {
                 @Override
                 public void run() {
