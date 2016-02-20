@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable;
 import java.io.ByteArrayOutputStream;
 
 import yhh.bj4.parasitic.launcher.LauncherProvider;
+import yhh.bj4.parasitic.launcher.Utilities;
 
 /**
  * Created by yenhsunhuang on 2016/2/12.
@@ -35,7 +36,7 @@ public abstract class InfoCache {
         mIconPackPackage = c.getString(c.getColumnIndex(LauncherProvider.COLUMN_INFO_CACHE_ICON_PACK));
         mPackageInfoFlag = c.getInt(c.getColumnIndex(LauncherProvider.COLUMN_INFO_CACHE_PACKAGE_INFO_FLAG));
         mTitle = c.getString(c.getColumnIndex(LauncherProvider.COLUMN_INFO_CACHE_ICON_LABEL));
-        mBitmap = getBlobBitmap(c.getBlob(c.getColumnIndex(LauncherProvider.COLUMN_INFO_CACHE_ICON_BITMAP)));
+        mBitmap = Utilities.getBlobBitmap(c.getBlob(c.getColumnIndex(LauncherProvider.COLUMN_INFO_CACHE_ICON_BITMAP)));
         mComponentName = new ComponentName(c.getString(c.getColumnIndex(LauncherProvider.COLUMN_INFO_CACHE_PACKAGE_NAME)),
                 c.getString(c.getColumnIndex(LauncherProvider.COLUMN_INFO_CACHE_CLASSNAME)));
     }
@@ -100,35 +101,19 @@ public abstract class InfoCache {
         mIconPackPackage = pack;
     }
 
-    public static Intent getStartIntent(ComponentName cn) {
-        Intent startIntent = new Intent();
-        startIntent.setAction(Intent.ACTION_MAIN);
-        startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startIntent.setComponent(cn);
-        return startIntent;
-    }
-
     public ContentValues save() {
         ContentValues cv = new ContentValues();
         cv.put(LauncherProvider.COLUMN_INFO_CACHE_ICON_PACK, mIconPackPackage);
         cv.put(LauncherProvider.COLUMN_INFO_CACHE_PACKAGE_INFO_FLAG, mPackageInfoFlag);
         cv.put(LauncherProvider.COLUMN_INFO_CACHE_ICON_LABEL, mTitle);
         cv.put(LauncherProvider.COLUMN_INFO_CACHE_PACKAGE_NAME, mComponentName.getPackageName());
-        cv.put(LauncherProvider.COLUMN_INFO_CACHE_CLASSNAME, mComponentName.getPackageName());
-        cv.put(LauncherProvider.COLUMN_INFO_CACHE_ICON_BITMAP, getBitmapBlob(mBitmap));
+        cv.put(LauncherProvider.COLUMN_INFO_CACHE_CLASSNAME, mComponentName.getClassName());
+        cv.put(LauncherProvider.COLUMN_INFO_CACHE_ICON_BITMAP, Utilities.getBitmapBlob(mBitmap));
         onSave(cv);
         return cv;
     }
 
     public abstract void onSave(ContentValues cv);
 
-    public static byte[] getBitmapBlob(Bitmap b) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        b.compress(Bitmap.CompressFormat.PNG, 100, bos);
-        return bos.toByteArray();
-    }
 
-    public static Bitmap getBlobBitmap(byte[] blob) {
-        return BitmapFactory.decodeByteArray(blob, 0, blob.length);
-    }
 }

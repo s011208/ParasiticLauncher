@@ -73,7 +73,7 @@ public class AllappsWidgetProvider extends BaseWidgetProvider {
                     context.getContentResolver().update(LauncherProvider.URI_ACTIVITY_USAGE_COMPONENT_INFO(cn), cv, null, null);
                 }
             }).start();
-            context.startActivity(InfoCache.getStartIntent(cn));
+            Utilities.startActivity(context.getApplicationContext(), cn);
         }
     }
 
