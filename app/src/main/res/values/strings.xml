@@ -56,4 +56,5 @@
         <item>@string/icon_list_customized</item>
     </string-array>
     <string name="select_icons">Select icons</string>
+    <string name="all_apps_widget_label">Grid all apps</string>
 </resources>

@@ -8,11 +8,11 @@
     <application
         android:name=".ParasiticApplication"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
         android:supportsRtl="true"
-        android:hardwareAccelerated="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -21,16 +21,10 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name="yhh.bj4.parasitic.launcher.widgets.ParasiticWidgetProvider">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/parasitic_widget_info" />
-        </receiver>
         <!-- all apps widget components start-->
-        <receiver android:name="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetProvider">
+        <receiver
+            android:name="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetProvider"
+            android:label="@string/all_apps_widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="yhh.bj4.parasitic.launcher.widgets.allapps.click" />
