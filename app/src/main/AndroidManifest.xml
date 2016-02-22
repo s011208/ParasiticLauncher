@@ -23,7 +23,7 @@
 
         <!-- all apps widget components start-->
         <receiver
-            android:name="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetProvider"
+            android:name=".widgets.allapps.gridview.AllappsWidgetProvider"
             android:label="@string/all_apps_widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -34,14 +34,14 @@
                 android:resource="@xml/allapps_widget_info" />
         </receiver>
         <activity
-            android:name=".widgets.allapps.AllappsWidgetConfigurationActivity"
+            android:name=".widgets.allapps.gridview.AllappsWidgetConfigurationActivity"
             android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
         <service
-            android:name="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetService"
+            android:name=".widgets.allapps.gridview.AllappsWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
         <!-- all apps widget components end-->
         <provider

@@ -2,7 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:initialKeyguardLayout="@layout/normal_size_all_apps_widget"
     android:initialLayout="@layout/normal_size_all_apps_widget"
-    android:configure="yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetConfigurationActivity"
+    android:configure="yhh.bj4.parasitic.launcher.widgets.allapps.gridview.AllappsWidgetConfigurationActivity"
     android:minHeight="40dp"
     android:minWidth="200dp"
     android:previewImage="@drawable/grid_all_apps_preview"

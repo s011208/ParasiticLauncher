@@ -7,7 +7,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetProvider;
+import yhh.bj4.parasitic.launcher.widgets.allapps.gridview.AllappsWidgetProvider;
 
 /**
  * Created by Yen-Hsun_Huang on 2016/2/15.

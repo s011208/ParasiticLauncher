@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import yhh.bj4.parasitic.launcher.R;
-import yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetConfigurePreference;
+import yhh.bj4.parasitic.launcher.widgets.allapps.gridview.AllappsWidgetConfigurePreference;
 
 /**
  * Created by yenhsunhuang on 2016/2/11.

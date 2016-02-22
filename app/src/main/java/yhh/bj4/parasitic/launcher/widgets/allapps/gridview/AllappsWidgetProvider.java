@@ -1,4 +1,4 @@
-package yhh.bj4.parasitic.launcher.widgets.allapps;
+package yhh.bj4.parasitic.launcher.widgets.allapps.gridview;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -22,7 +22,6 @@ import java.io.File;
 import yhh.bj4.parasitic.launcher.LauncherProvider;
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.Utilities;
-import yhh.bj4.parasitic.launcher.loader.InfoCache;
 import yhh.bj4.parasitic.launcher.utils.images.BackgroundTypeChooserDialog;
 import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 import yhh.bj4.parasitic.launcher.widgets.BaseWidgetProvider;
