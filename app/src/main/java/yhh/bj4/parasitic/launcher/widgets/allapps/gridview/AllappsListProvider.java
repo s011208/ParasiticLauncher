@@ -29,6 +29,7 @@ import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFrequency;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromAToZ;
 import yhh.bj4.parasitic.launcher.utils.iconsorting.SortFromZToA;
 import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
+import yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetConfigurePreference;
 
 /**
  * Created by yenhsunhuang on 2016/2/6.

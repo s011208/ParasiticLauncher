@@ -1,4 +1,4 @@
-package yhh.bj4.parasitic.launcher.widgets.allapps.gridview;
+package yhh.bj4.parasitic.launcher.widgets.allapps;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import yhh.bj4.parasitic.launcher.R;
 import yhh.bj4.parasitic.launcher.widgets.BaseWidgetPreferenceFragment;
+import yhh.bj4.parasitic.launcher.widgets.allapps.gridview.AllappsWidgetProvider;
 
 /**
  * Created by yenhsunhuang on 2016/2/7.

@@ -25,6 +25,7 @@ import yhh.bj4.parasitic.launcher.Utilities;
 import yhh.bj4.parasitic.launcher.utils.images.BackgroundTypeChooserDialog;
 import yhh.bj4.parasitic.launcher.utils.sizelist.SizeListDialog;
 import yhh.bj4.parasitic.launcher.widgets.BaseWidgetProvider;
+import yhh.bj4.parasitic.launcher.widgets.allapps.AllappsWidgetConfigurePreference;
 
 /**
  * Created by yenhsunhuang on 2016/2/6.

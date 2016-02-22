@@ -1,4 +1,4 @@
-package yhh.bj4.parasitic.launcher.widgets.allapps.gridview;
+package yhh.bj4.parasitic.launcher.widgets.allapps;
 
 import android.app.Activity;
 import android.content.Intent;

@@ -34,7 +34,7 @@
                 android:resource="@xml/allapps_widget_info" />
         </receiver>
         <activity
-            android:name=".widgets.allapps.gridview.AllappsWidgetConfigurationActivity"
+            android:name=".widgets.allapps.AllappsWidgetConfigurationActivity"
             android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
